@@ -12,6 +12,14 @@ public static class CrashLabBuild
     [MenuItem("TOTALLED/Create Crash Lab scene")]
     public static void CreateScene()
     {
+        // Runtime-created meshes need explicit material assets so player stripping
+        // cannot remove shaders that were only referenced by Shader.Find strings.
+        Directory.CreateDirectory("Assets/TOTALLED/Resources/TOTALLED");
+        AssetDatabase.Refresh();
+        string surface="Assets/TOTALLED/Resources/TOTALLED/Surface.mat";
+        string debug="Assets/TOTALLED/Resources/TOTALLED/DebugLines.mat";
+        if(AssetDatabase.LoadAssetAtPath<Material>(surface)==null)AssetDatabase.CreateAsset(new Material(Shader.Find("Standard")),surface);
+        if(AssetDatabase.LoadAssetAtPath<Material>(debug)==null)AssetDatabase.CreateAsset(new Material(Shader.Find("Hidden/Internal-Colored")),debug);
         Directory.CreateDirectory("Assets/TOTALLED/Scenes");
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
@@ -98,6 +106,13 @@ public static class CrashLabBuild
             var severe=Record(car,"six-more-high-speed-hits");Capture(lab,"08-severe-wreck");
             Check(car.structure.Finite(),"High-speed endurance impacts remain finite.");
             Check(severe.maxWheelMisalignment>settled.maxWheelMisalignment+.5f,"Damaged mounting geometry changes wheel alignment.");
+            Check(severe.detachedPanels>0,"High-speed impacts fully detach a panel after partial mount failure.");
+            var detached=new List<int>();var oldPositions=new List<Vector3>();
+            foreach(var p in car.panels)if(p.LiveMounts(car.structure)==0)foreach(int n in p.nodes){detached.Add(n);oldPositions.Add(car.structure.nodes[n].position);}
+            car.Recover(new Vector3(0,1.1f,0));
+            bool debrisStayed=true;for(int i=0;i<detached.Count;i++)if(car.structure.nodes[detached[i]].position!=oldPositions[i])debrisStayed=false;
+            Check(debrisStayed&&detached.Count>0,"Recovery leaves fully detached panel debris in place.");
+            Run(lab,150);Record(car,"severe-wreck-recovered");Capture(lab,"09-recovered-wreck");
         }
         catch(Exception e) {report.passed=false;report.checks.Add("EXCEPTION: "+e);Debug.LogException(e);}
         File.WriteAllText("Artifacts/verification.json",JsonUtility.ToJson(report,true));

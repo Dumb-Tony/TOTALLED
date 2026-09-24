@@ -1,0 +1,57 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+namespace Totalled
+{
+    // Optional unattended standalone check; normal launches never run this sequence.
+    public sealed class CrashLabSmoke : MonoBehaviour
+    {
+        [Serializable] public sealed class Result
+        {
+            public bool passed;
+            public int offscreenCaptures, brokenBeams;
+            public float seconds, accumulatedPlasticTravel;
+            public string scope="Hidden standalone player, explicit camera renders; excludes screen-space HUD and interactive framerate measurement.";
+            public List<string> errors=new List<string>();
+        }
+        readonly Result result=new Result();
+        string folder;
+        float began;
+        void OnEnable() {Application.logMessageReceived+=OnLog;}
+        void OnDisable() {Application.logMessageReceived-=OnLog;}
+        void OnLog(string message,string stack,LogType type)
+        {if(type==LogType.Exception||type==LogType.Error||type==LogType.Assert)result.errors.Add(message);}
+        IEnumerator Start()
+        {
+            folder=Path.GetFullPath(Path.Combine(Application.dataPath,"../../..","Artifacts"));Directory.CreateDirectory(folder);
+            var lab=GetComponent<CrashLab>();began=Time.realtimeSinceStartup;
+            yield return new WaitForSeconds(2);
+            Capture(lab,"runtime-pristine.png");
+            yield return new WaitForSeconds(1);
+            lab.Impact(0);yield return new WaitForSeconds(3);
+            lab.Impact(0);yield return new WaitForSeconds(3);
+            Capture(lab,"runtime-damaged.png");
+            yield return new WaitForSeconds(1);
+            result.seconds=Time.realtimeSinceStartup-began;result.brokenBeams=lab.Active.structure.BrokenCount;
+            result.accumulatedPlasticTravel=lab.Active.structure.PlasticTotal;
+            result.passed=result.errors.Count==0&&result.offscreenCaptures==2&&lab.Active.structure.Finite()&&result.accumulatedPlasticTravel>.01f;
+            File.WriteAllText(Path.Combine(folder,"runtime-smoke.json"),JsonUtility.ToJson(result,true));
+            Application.Quit(result.passed?0:2);
+        }
+        void Capture(CrashLab lab,string file)
+        {
+            // A hidden Windows player may skip backbuffer rendering entirely. Explicit
+            // offscreen rendering checks shader inclusion without inventing an FPS score.
+            lab.View.Refresh();var camera=lab.LabCamera;
+            var target=new RenderTexture(1600,900,24);camera.targetTexture=target;camera.Render();RenderTexture.active=target;
+            var pixels=new Texture2D(1600,900,TextureFormat.RGB24,false);
+            pixels.ReadPixels(new Rect(0,0,1600,900),0,0);pixels.Apply();
+            File.WriteAllBytes(Path.Combine(folder,file),pixels.EncodeToPNG());
+            camera.targetTexture=null;RenderTexture.active=null;Destroy(pixels);Destroy(target);
+            result.offscreenCaptures++;
+        }
+    }
+}

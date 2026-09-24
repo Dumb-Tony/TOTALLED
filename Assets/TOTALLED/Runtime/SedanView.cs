@@ -22,7 +22,9 @@ namespace Totalled
         public int debugMode;
         public static Material Material(Color color, float metallic=0, float smoothness=.3f)
         {
-            var m=new Material(Shader.Find("Standard")); m.color=color; m.SetFloat("_Metallic",metallic);m.SetFloat("_Glossiness",smoothness); return m;
+            var template=Resources.Load<Material>("TOTALLED/Surface");
+            var m=template!=null?new Material(template):new Material(Shader.Find("Standard"));
+            m.color=color; m.SetFloat("_Metallic",metallic);m.SetFloat("_Glossiness",smoothness); return m;
         }
         public SedanView(SacrificialSedan car)
         {
@@ -31,7 +33,8 @@ namespace Totalled
             nodeMat=Material(new Color(.2f,1,.83f));componentMat=Material(new Color(.15f,.65f,.85f));
             shellMesh=NewMesh("Node skinned body",paint,out shellRenderer);
             foreach(var p in car.panels) { panelMeshes.Add(NewMesh(p.name,paint,out MeshRenderer r)); panelRenderers.Add(r); }
-            var lineMaterial=new Material(Shader.Find("Hidden/Internal-Colored"));
+            var lineTemplate=Resources.Load<Material>("TOTALLED/DebugLines");
+            var lineMaterial=lineTemplate!=null?new Material(lineTemplate):new Material(Shader.Find("Hidden/Internal-Colored"));
             lineMaterial.SetInt("_SrcBlend",(int)BlendMode.SrcAlpha);lineMaterial.SetInt("_DstBlend",(int)BlendMode.OneMinusSrcAlpha);
             lineMaterial.SetInt("_Cull",(int)CullMode.Off);lineMaterial.SetInt("_ZWrite",0);
             debugMesh=NewMesh("Structural instrumentation",lineMaterial,out debugRenderer);

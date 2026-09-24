@@ -10,7 +10,8 @@ Open the project in Unity, open `Assets/TOTALLED/Scenes/CrashLab.unity`, and pre
 |---|---|
 | WASD / arrow keys | Throttle, reverse, steer |
 | Space / left Ctrl | Rear handbrake / all-wheel brake |
-| 1 / 2 / 3 | Launch same damaged specimen into front / rear / side wall |
+| 1 / 2 / 3 / 4 | Launch same damaged specimen into front / rear / side wall / offset pole |
+| [ / ] | Decrease / increase laboratory launch speed |
 | R | Upright and relocate connected structure; preserve all damage |
 | N | Spawn a new specimen; keep old wreck and debris |
 | P / period / T | Pause / single step while paused / slow motion |
@@ -28,7 +29,9 @@ From PowerShell (close this project's editor first):
 & 'C:\Program Files\Unity\Hub\Editor\6000.6.0f1\Editor\Unity.exe' -batchmode -projectPath 'C:\Dev\Unity\TOTALLED' -executeMethod CrashLabBuild.Verify -logFile 'C:\Dev\Unity\TOTALLED\verification.log'
 ```
 
-The verifier exits Unity when finished. Inspect `Artifacts/verification.json` and the six PNG captures. `-nographics` allows numerical checks but intentionally skips captures. Use the **TOTALLED** editor menu for an interactive run; it replaces the open scene, so save your edits first.
+The verifier exits Unity when finished. Inspect `Artifacts/verification.json` and the nine PNG captures. `-nographics` allows numerical checks but intentionally skips captures. Use the **TOTALLED** editor menu for an interactive run; it replaces the open scene, so save your edits first.
+
+Launch the Windows player with `-crashlab-smoke` for a ten-second unattended rendered check. It writes `Artifacts/runtime-smoke.json` and two screenshots, then exits. This option is only for validation; ordinary launches are fully interactive.
 
 ## Structure
 
@@ -40,4 +43,3 @@ The verifier exits Unity when finished. Inspect `Artifacts/verification.json` an
 - `Docs/Design.md`: design intent, acceptance gate and precise limitations.
 
 **Current collision limit:** cars and their detached parts collide with the static lab, but not with each other. The full derby and physically interacting wreck pile are not implemented. See the design contract before interpreting this as a finished BeamNG-style system.
-

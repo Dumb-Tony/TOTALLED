@@ -13,7 +13,7 @@ namespace Totalled
         SphereCollider probe;
         bool paused, slow, orbit, body=true, debug, components;
         int debugMode;
-        float yaw=145, pitch=24, distance=9;
+        float yaw=25, pitch=24, distance=9;
         public float LaunchSpeed=18;
         Vector3 cameraTarget;
         GUIStyle titleStyle, textStyle, smallStyle;
@@ -52,7 +52,11 @@ namespace Totalled
             Label("02 / OFFSET",new Vector3(-8,2.4f,12),.18f);
             Physics.SyncTransforms();NewSpecimen();MoveCamera(true);
         }
-        void Start() { Initialize(); }
+        void Start()
+        {
+            Initialize();
+            if(System.Array.IndexOf(System.Environment.GetCommandLineArgs(),"-crashlab-smoke")>=0)gameObject.AddComponent<CrashLabSmoke>();
+        }
         public void NewSpecimen()
         {
             if(Active!=null) { Active.throttle=0;Active.brake=1; }
@@ -67,7 +71,7 @@ namespace Totalled
         static void Label(string value,Vector3 pos,float size)
         {
             var g=new GameObject(value);g.transform.position=pos;
-            var t=g.AddComponent<TextMesh>();t.text=value;t.characterSize=size;t.fontSize=64;t.color=new Color(.86f,.9f,.9f);
+            var t=g.AddComponent<TextMesh>();t.text=value;t.characterSize=size*.24f;t.fontSize=64;t.color=new Color(.86f,.9f,.9f);
         }
         void Update()
         {
@@ -99,7 +103,7 @@ namespace Totalled
         public void Impact(int direction)
         {
             paused=false;
-            Active.Recover(direction==0?new Vector3(0,1.1f,14):direction==1?new Vector3(0,1.1f,-14):direction==2?new Vector3(14,1.1f,0):new Vector3(6.6f,1.1f,5));
+            Active.Recover(direction==0?new Vector3(0,1.1f,14):direction==1?new Vector3(0,1.1f,-14):direction==2?new Vector3(14,1.1f,0):new Vector3(6.3f,1.1f,5));
             Active.Launch((direction==0||direction==3?Vector3.forward:direction==1?Vector3.back:Vector3.right)*LaunchSpeed);
             MoveCamera(true);
         }
@@ -108,15 +112,20 @@ namespace Totalled
             if(LabCamera==null||Active==null)return;
             cameraTarget=snap?Active.Center:Vector3.Lerp(cameraTarget,Active.Center,1-Mathf.Exp(-Time.unscaledDeltaTime*9));
             Vector3 offset=Quaternion.Euler(pitch,yaw,0)*new Vector3(0,0,-distance);
-            LabCamera.transform.position=cameraTarget+offset;LabCamera.transform.LookAt(cameraTarget+Vector3.up*.3f);
+            Vector3 lookAt=cameraTarget+Vector3.up*.3f;
+            Vector3 desired=cameraTarget+offset;
+            Vector3 path=desired-lookAt;
+            if(Physics.SphereCast(lookAt,.2f,path.normalized,out RaycastHit obstruction,path.magnitude,1<<0,QueryTriggerInteraction.Ignore))
+                desired=lookAt+path.normalized*Mathf.Max(.4f,obstruction.distance-.15f);
+            LabCamera.transform.position=desired;LabCamera.transform.LookAt(lookAt);
         }
         void OnGUI()
         {
             if(Active==null)return;
             if(titleStyle==null) { titleStyle=new GUIStyle(GUI.skin.label){fontSize=25,fontStyle=FontStyle.Bold};titleStyle.normal.textColor=new Color(1,.69f,.22f);textStyle=new GUIStyle(GUI.skin.label){fontSize=15};smallStyle=new GUIStyle(GUI.skin.label){fontSize=12}; }
             float scale=Mathf.Clamp(Screen.height/900f,.8f,1.5f);GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
-            GUI.Box(new Rect(18,18,360,363),GUIContent.none);
-            GUILayout.BeginArea(new Rect(32,27,335,350));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN",smallStyle);GUILayout.Space(12);
+            GUI.Box(new Rect(18,18,360,405),GUIContent.none);
+            GUILayout.BeginArea(new Rect(32,27,335,390));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN",smallStyle);GUILayout.Space(12);
             GUILayout.Label($"{Mathf.Abs(Active.Speed)*3.6f:0} km/h    {(paused?"PAUSED":slow?"SLOW MOTION":"LIVE")}",textStyle);
             GUILayout.Label($"{Active.structure.nodes.Count} nodes  /  {Active.structure.beams.Count} beams",textStyle);
             GUILayout.Label($"Yielded {Active.structure.PlasticCount}   Broken {Active.structure.BrokenCount}",textStyle);
