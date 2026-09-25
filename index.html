@@ -21,10 +21,10 @@ canvas.addEventListener('contextmenu',event=>event.preventDefault());
 canvas.addEventListener('pointerdown',()=>canvas.focus());
 canvas.addEventListener('keydown',event=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(event.code))event.preventDefault();});
 document.getElementById('fullscreen').onclick=()=>{if(unity){unity.SetFullscreen(1);canvas.focus();}};
-const loader=document.createElement('script');loader.src='Build/WebGL.loader.js';
+const loader=document.createElement('script');loader.src='Build/49d8d9b0352603f0cd343c0564bb7230.loader.js';
 loader.onerror=()=>fail('The game download failed. Please refresh to try again.');
 loader.onload=()=>createUnityInstance(canvas,{
- dataUrl:'Build/WebGL.data.unityweb',frameworkUrl:'Build/WebGL.framework.js.unityweb',codeUrl:'Build/WebGL.wasm.unityweb',
+ dataUrl:'Build/0d797717e3b738d6bbf21b05be192e56.data.unityweb',frameworkUrl:'Build/aec262a874b5bdb4a0af2fb03200b9c9.framework.js.unityweb',codeUrl:'Build/6502632d503f091d398d5b4d1f907a92.wasm.unityweb',
  streamingAssetsUrl:'StreamingAssets',companyName:'TOTALLED',productName:'TOTALLED Crash Lab',productVersion:'0.1.0',devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5),
  showBanner:(text,type)=>{if(type==='error')fail(text);else console.warn(text);}
 },progress=>{document.getElementById('progress').value=progress;message.textContent='Loading the playtest… '+Math.round(progress*100)+'%';})
