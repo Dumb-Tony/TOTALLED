@@ -39,6 +39,10 @@ namespace Totalled
                 Box("Bumper impact rubber",new Vector3(0,.665f,end*2.44f),new Vector3(1.85f,.13f,.12f),dash);
                 Box("Bumper upper chrome",new Vector3(0,.744f,end*2.445f),new Vector3(1.86f,.027f,.14f),metal);
             }
+            Box("Boot liner",new Vector3(0,.64f,-1.58f),new Vector3(1.50f,.04f,1.42f),dash);
+            Cylinder("Boot spare tire",new Vector3(0,.74f,-1.57f),new Vector3(.62f,.09f,.62f),dash);
+            Cylinder("Spare steel wheel",new Vector3(0,.825f,-1.57f),new Vector3(.37f,.015f,.37f),metal);
+            Cylinder("Spare center clamp",new Vector3(0,.85f,-1.57f),new Vector3(.07f,.03f,.07f),iron);
             Box("Engine bay floor",new Vector3(0,.635f,1.53f),new Vector3(1.35f,.035f,1.55f),dash);
             Box("Engine block",new Vector3(0,.77f,1.46f),new Vector3(.61f,.31f,.70f),enginePaint);
             foreach(float side in new[]{-1f,1f})
@@ -127,14 +131,7 @@ namespace Totalled
             mesh.vertices=vertices.ToArray();mesh.uv=uv.ToArray();mesh.triangles=indices.ToArray();
             parts.Add(new Part{mesh=mesh,rest=vertices.ToArray(),current=vertices.ToArray(),go=go});
         }
-        Vector3 Skin(Vector3 p)
-        {
-            float sx=(p.x+.83f)/.83f,sz=(p.z+2.4f)/.8f,sy=(p.y-.58f)/.46f;
-            int x=Mathf.Clamp(Mathf.FloorToInt(sx),0,1),z=Mathf.Clamp(Mathf.FloorToInt(sz),0,5);float u=sx-x,w=sz-z;
-            Vector3 point=Vector3.zero;
-            for(int k=0;k<2;k++)for(int j=0;j<2;j++)for(int i=0;i<2;i++)point+=car.structure.nodes[SacrificialSedan.Index(x+i,j,z+k)].position*(i==0?1-u:u)*(j==0?1-sy:sy)*(k==0?1-w:w);
-            return point;
-        }
+        Vector3 Skin(Vector3 p)=>CrumpleCage.Skin(car,p);
         public void Refresh(bool visible)
         {
             foreach(var part in parts)

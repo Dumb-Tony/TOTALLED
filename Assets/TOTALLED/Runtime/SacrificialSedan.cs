@@ -38,6 +38,8 @@ namespace Totalled
         public readonly List<MechanicalPart> parts = new List<MechanicalPart>();
         public readonly List<int[]> shell = new List<int[]>();
         public int chassisCount;
+        public int[] rearFold,frontFold;
+        public bool IsBodyNode(int i)=>i<chassisCount||(rearFold!=null&&i>=rearFold[0]);
         public float throttle, steering, brake, temperature = 80, fuel = 1;
         public float DriveForceLastStep, DistanceTravelled;
         public float SteeringAngle {get;private set;}
@@ -55,19 +57,24 @@ namespace Totalled
         public SacrificialSedan(Vector3 origin, SphereCollider probe)
         {
             structure = new SoftStructure(probe);
+            float[] stations={-2.4f,-1.6f,-1.1f,0,.95f,1.6f,2.4f};
             for (int z = 0; z < 7; z++)
                 for (int y = 0; y < 2; y++)
                     for (int x = 0; x < 3; x++)
-                        structure.AddNode(origin + new Vector3((x - 1) * .83f, y == 0 ? .58f : 1.04f, (z - 3) * .8f));
+                        structure.AddNode(origin + new Vector3((x - 1) * .83f, y == 0 ? .58f : 1.04f, stations[z]));
             chassisCount = structure.nodes.Count;
             for (int a = 0; a < chassisCount; a++)
                 for (int b = a + 1; b < chassisCount; b++)
                 {
                     var d = structure.nodes[a].original - structure.nodes[b].original;
-                    if (Mathf.Abs(d.x) <= .84f && Mathf.Abs(d.y) <= .47f && Mathf.Abs(d.z) <= .81f)
+                    if (Mathf.Abs(d.x) <= .84f && Mathf.Abs(d.y) <= .47f && Mathf.Abs(a/6-b/6) <= 1)
                     {
-                        bool end = a / 6 <= 1 || b / 6 >= 5;
-                        int beam=structure.AddBeam(a, b, end ? 2e-8f : 6e-9f, end ? .017f : .15f, end ? .85f : 1.6f);
+                        int za=a/6,zb=b/6;
+                        if((za==0&&zb==1)||(za==5&&zb==6))continue;
+                        bool end=za<=1||zb>=5;
+                        bool transition=(za==1&&zb==2)||(za==4&&zb==5);
+                        float yield=transition?.032f:end?.020f:.15f;
+                        int beam=structure.AddBeam(a, b, end ? 2e-8f : 6e-9f, yield, end ? 1.05f : 1.6f);
                         structure.beams[beam].plasticRate=end?120:24;
                     }
                 }
@@ -88,14 +95,14 @@ namespace Totalled
             for (int i=0;i<4;i++) { structure.AddBeam(roof[i],baseRoof[i], 1e-8f,.16f,1.2f); structure.AddBeam(roof[i],baseRoof[(i+1)%4], 2e-8f,.16f,1.2f); }
             Quad(roof[0],roof[3],roof[2],roof[1]);
             // Windows are open; narrow structural pillars remain visible in the render layer.
-            Panel("Hood", origin, new [] { new Vector3(-.85f,1.09f,.82f),new Vector3(.85f,1.09f,.82f),new Vector3(.85f,1.09f,2.4f),new Vector3(-.85f,1.09f,2.4f) },
+            Panel("Hood", origin, new [] { new Vector3(-.85f,1.09f,.97f),new Vector3(.85f,1.09f,.97f),new Vector3(.85f,1.09f,2.4f),new Vector3(-.85f,1.09f,2.4f) },
                 new []{Index(0,1,4),Index(2,1,4),Index(2,1,6)});
-            Panel("Trunk", origin, new [] { new Vector3(.85f,1.09f,-.82f),new Vector3(-.85f,1.09f,-.82f),new Vector3(-.85f,1.09f,-2.4f),new Vector3(.85f,1.09f,-2.4f) },
+            Panel("Trunk", origin, new [] { new Vector3(.85f,1.09f,-1.12f),new Vector3(-.85f,1.09f,-1.12f),new Vector3(-.85f,1.09f,-2.4f),new Vector3(.85f,1.09f,-2.4f) },
                 new []{Index(2,1,2),Index(0,1,2),Index(0,1,0)});
             for (int side=0;side<2;side++)
             {
                 float x=side==0?-.88f:.88f; int sx=side==0?0:2;
-                Panel(side==0?"Left door":"Right door",origin,new []{new Vector3(x,.63f,.78f),new Vector3(x,1.12f,.78f),new Vector3(x,1.12f,-.78f),new Vector3(x,.63f,-.78f)},
+                Panel(side==0?"Left door":"Right door",origin,new []{new Vector3(x,.63f,.93f),new Vector3(x,1.12f,.93f),new Vector3(x,1.12f,-1.08f),new Vector3(x,.63f,-1.08f)},
                     new []{Index(sx,0,4),Index(sx,1,4),Index(sx,1,2)});
             }
             for (int z=1;z<=5;z+=4) for (int side=0;side<2;side++)
@@ -103,7 +110,7 @@ namespace Totalled
                 int x=side==0?0:2;
                 var w=new WheelAssembly { name=(z==5?"Front ":"Rear ")+(side==0?"L":"R"), steering=z==5, driven=z==1,
                     front=Index(x,0,z+1), rear=Index(x,0,z-1), upper=Index(x,1,z),
-                    hub=structure.AddNode(origin+new Vector3(side==0?-1.01f:1.01f,.4f,(z-3)*.8f),30,.36f) };
+                    hub=structure.AddNode(origin+new Vector3(side==0?-.89f:.89f,.4f,(z-3)*.8f),30,.36f) };
                 w.links.Add(structure.AddBeam(w.hub,w.front,2e-7f,.23f,1.25f,true));
                 w.links.Add(structure.AddBeam(w.hub,w.rear,2e-7f,.23f,1.25f,true));
                 w.links.Add(structure.AddBeam(w.hub,w.upper,2e-5f,.3f,1.5f,true));
@@ -114,6 +121,7 @@ namespace Totalled
             Part("Engine",Index(1,0,4),Index(1,1,5),1.35f);
             Part("Transmission",Index(1,0,3),Index(1,0,4),1.2f);
             Part("Fuel tank",Index(0,0,1),Index(2,0,1),1.5f);
+            CrumpleCage.Build(this);
         }
         void Quad(int a,int b,int c,int d) { shell.Add(new[]{a,b,c,d}); }
         void Part(string name,int a,int b,float sensitivity) { parts.Add(new MechanicalPart { name=name,a=a,b=b,span=Vector3.Distance(structure.nodes[a].position,structure.nodes[b].position),sensitivity=sensitivity }); }
@@ -190,7 +198,7 @@ namespace Totalled
                 {
                     float turnRadius=3.2f/Mathf.Tan(Mathf.Abs(angle)*Mathf.Deg2Rad);
                     bool inside=Vector3.Dot(hub.position-Center,Right)*angle>0;
-                    angle=Mathf.Sign(angle)*Mathf.Atan(3.2f/Mathf.Max(.5f,turnRadius+(inside?-1.01f:1.01f)))*Mathf.Rad2Deg;
+                    angle=Mathf.Sign(angle)*Mathf.Atan(3.2f/Mathf.Max(.5f,turnRadius+(inside?-.89f:.89f)))*Mathf.Rad2Deg;
                 }
                 w.forward=Quaternion.AngleAxis(w.steering?angle:0,mountUp)*mountForward;
                 int links=w.LiveLinks(structure);

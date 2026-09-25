@@ -1,0 +1,12 @@
+{
+    "passed": true,
+    "offscreenCaptures": 3,
+    "brokenBeams": 21,
+    "activeEngineSources": 2,
+    "skidVertices": 192,
+    "tireSoundActive": true,
+    "seconds": 12.116677284240723,
+    "accumulatedPlasticTravel": 7.457199573516846,
+    "scope": "Hidden standalone player, explicit camera renders; excludes screen-space HUD and interactive framerate measurement.",
+    "errors": []
+}

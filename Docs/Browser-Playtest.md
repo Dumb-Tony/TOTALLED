@@ -5,7 +5,7 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.7.0`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.8.0`.
 
 ## Live checks — 0.2 (historical)
 
@@ -53,3 +53,9 @@ All 47 simulation checks pass, including opposite-pedal braking and subsequent r
 
 Live Pages verification: 0.7 starts and renders the updated cars without console errors. A 5-key collision moved the target and left the player with 107 yielded beams, 3 broken connections and 3.201 m accumulated plastic travel. Switching with E showed the struck car retained 59 yielded beams and 0.710 m plastic travel. The player's detached hood revealed the engine bay.
 
+
+## Build checks — 0.8
+
+All 55 simulation checks pass. Added front/rear stage checks verify both sections yield under actual wall impacts while the cabin sees much less permanent deformation; node mass remains 1272 kg. Front stage totals in the controlled test: outer 2.506 m, inner 0.265 m; cabin 0.006 m. Rear: outer 3.319 m, inner 0.343 m; cabin below 0.001 m. These are summed beam rest-length changes, not body shortening.
+
+Packaged Windows startup, repeated collisions, engine/tire audio sources and skid marks pass without errors. Intact and damaged rendered captures were inspected. Browser interaction automation could not start after the host restart because its sandbox helper failed; this release uses deployment and asset checks rather than a claimed live browser-driving test.

@@ -98,7 +98,7 @@ namespace Totalled
                 Active.throttle=0;Active.brake=0;Active.handbrake=false;
                 var previous=Active;Active=Target;Target=previous;View=views[cars.IndexOf(Active)];MoveCamera(true);
             }
-            if(Input.GetKeyDown(KeyCode.Tab))debugMode=(debugMode+1)%3;
+            if(Input.GetKeyDown(KeyCode.Tab))debugMode=(debugMode+1)%4;
             if(Input.GetKeyDown(KeyCode.N))NewSpecimen();
             if(Input.GetKeyDown(KeyCode.R))Active.Recover(new Vector3(0,1.1f,0));
             if(Input.GetKeyDown(KeyCode.Alpha1))Impact(0);
@@ -156,7 +156,7 @@ namespace Totalled
                 float width=Screen.width/scale,height=Screen.height/scale;
                 GUI.color=new Color(.06f,.09f,.11f,.94f);GUI.DrawTexture(new Rect(18,18,265,116),Texture2D.whiteTexture);GUI.color=Color.white;
                 GUI.Label(new Rect(32,26,240,32),"TOTALLED",titleStyle);
-                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.7",smallStyle);
+                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.8",smallStyle);
                 GUI.Label(new Rect(32,88,240,28),$"{Mathf.Abs(Active.Speed)*3.6f:000} KM/H   {(paused?"PAUSED":Active.handbrake?"HANDBRAKE":Active.brake>0?"BRAKING":"SACRIFICIAL SEDAN")}",smallStyle);
                 GUI.color=new Color(.06f,.09f,.11f,.92f);GUI.DrawTexture(new Rect(18,height-90,Mathf.Min(690,width-36),72),Texture2D.whiteTexture);GUI.color=Color.white;
                 GUI.Label(new Rect(30,height-86,width-55,24),"WASD drive   SPACE handbrake   SHIFT brake   R recover   H telemetry   M mute",smallStyle);
@@ -165,7 +165,7 @@ namespace Totalled
                 return;
             }
             GUI.Box(new Rect(18,18,360,480),GUIContent.none);
-            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.7",smallStyle);GUILayout.Space(12);
+            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.8",smallStyle);GUILayout.Space(12);
             GUILayout.Label($"{Mathf.Abs(Active.Speed)*3.6f:0} km/h    {(paused?"PAUSED":slow?"SLOW MOTION":"LIVE")}",textStyle);
             GUILayout.Label(Active.handbrake?"HANDBRAKE / REAR TIRES LOCKING":Active.brake>0?"BRAKE / FOUR-WHEEL STOP":"ROLLING / FULL TIRE GRIP",smallStyle);
             GUILayout.Label($"{Active.structure.nodes.Count} nodes  /  {Active.structure.beams.Count} beams",textStyle);
@@ -183,10 +183,10 @@ namespace Totalled
             GUILayout.Label($"1 front / 2 rear / 3 side / 4 pole • [ ] speed {LaunchSpeed*3.6f:0} km/h",textStyle);
             GUILayout.Label("R recover, keep damage  •  N new car, keep wreck",smallStyle);
             GUILayout.Label("P pause  •  . step  •  T slow motion  •  B body  •  V skeleton",smallStyle);
-            GUILayout.Label($"TAB stress / plastic / broken  •  C components  •  RMB orbit / scroll zoom",smallStyle);
+            GUILayout.Label($"TAB stress / plastic / broken / zones  •  C components  •  RMB orbit / scroll zoom",smallStyle);
             GUILayout.Label("5 parked target / 6 sideways • H hide telemetry • Both cars deform",smallStyle);
             GUILayout.EndArea();
-            if(debug) { GUI.Label(new Rect(395,25,500,30),"STRUCTURE / "+new[]{"STRESS","PLASTIC TRAVEL","BROKEN CONNECTIONS"}[debugMode],textStyle); }
+            if(debug) { GUI.Label(new Rect(395,25,500,30),"STRUCTURE / "+new[]{"STRESS","PLASTIC TRAVEL","BROKEN CONNECTIONS","CRUMPLE ZONES"}[debugMode],textStyle); }
         }
         void OnDestroy() { Time.timeScale=1; }
     }

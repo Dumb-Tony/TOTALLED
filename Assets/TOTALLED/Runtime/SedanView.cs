@@ -112,7 +112,7 @@ namespace Totalled
                 Vector3 originalNormal=Vector3.Cross(n1.original-n0.original,n3.original-n0.original);
                 reverseFace=Vector3.Dot(originalNormal,(n0.original+n1.original+n2.original+n3.original)*.25f-(car.structure.nodes[19].original+Vector3.up*.22f))<0;
                 Vector3 p0=SedanShape.Position(car,q[0]),p1=SedanShape.Position(car,q[1]),p2=SedanShape.Position(car,q[2]),p3=SedanShape.Position(car,q[3]);
-                bool flank=q[0]<42&&q[1]<42&&q[2]<42&&q[3]<42&&Mathf.Abs(n0.original.x)>.8f&&Mathf.Abs(n0.original.x-n2.original.x)<.01f&&n1.original.y>n0.original.y;
+                bool flank=car.IsBodyNode(q[0])&&car.IsBodyNode(q[1])&&car.IsBodyNode(q[2])&&car.IsBodyNode(q[3])&&Mathf.Abs(n0.original.x)>.8f&&Mathf.Abs(n0.original.x-n2.original.x)<.01f&&n1.original.y>n0.original.y;
                 if(flank)
                 {
                     float localZ=(n0.original.z+n3.original.z)*.5f-(car.structure.nodes[19].original.z);
@@ -220,6 +220,11 @@ namespace Totalled
                 Color c=b.broken?new Color(1,.15f,.25f):debugMode==1?Color.Lerp(new Color(.1f,.4f,.9f),Color.yellow,Mathf.Clamp01(b.plastic/b.initial*4)):
                     Color.Lerp(new Color(.1f,.9f,.65f),Color.red,Mathf.Clamp01(b.stress));
                 if(debugMode==2&&!b.broken) c.a=.12f;
+                if(debugMode==3&&!b.broken)
+                {
+                    float z=Mathf.Abs((car.structure.nodes[b.a].original.z+car.structure.nodes[b.b].original.z)*.5f-car.structure.nodes[19].original.z);
+                    c=!car.IsBodyNode(b.a)||!car.IsBodyNode(b.b)?new Color(.6f,.6f,.6f,.35f):z>2?new Color(1,.3f,.1f):z>1.6f?Color.yellow:z>.95f?new Color(.3f,.6f,1):new Color(.1f,1,.65f);
+                }
                 Line(verts,colors,indices,car.structure.nodes[b.a].position,car.structure.nodes[b.b].position,c);
             }
             foreach(var sample in car.structure.contacts)

@@ -47,6 +47,7 @@ namespace Totalled
         }
         public static void Dress(Camera camera)
         {
+            YardReflections.Apply();
             QualitySettings.shadows=ShadowQuality.All;QualitySettings.shadowResolution=ShadowResolution.High;
             QualitySettings.shadowDistance=55;QualitySettings.shadowCascades=2;QualitySettings.antiAliasing=2;
             RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=new Color(.50f,.58f,.66f);

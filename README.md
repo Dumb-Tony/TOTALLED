@@ -21,7 +21,7 @@ Open the project in Unity, open `Assets/TOTALLED/Scenes/CrashLab.unity`, and pre
 | N | Spawn a new specimen; keep old wreck and debris |
 | P / period / T | Pause / single step while paused / slow motion |
 | B / V / C | Toggle body / node-beam overlay / component markers |
-| Tab | Stress → cumulative plastic travel → broken-beam emphasis |
+| Tab | Stress → cumulative plastic travel → broken-beam emphasis → crumple zones |
 | Right mouse drag / wheel | Orbit / zoom |
 
 Impact shortcuts are explicit laboratory launches, not normal vehicle driving. Debris that has detached is left where it fell when recovering a specimen. There is no global vehicle health or automatic wreck deletion.

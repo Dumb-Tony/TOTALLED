@@ -44,7 +44,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.7.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.8.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;
@@ -58,7 +58,7 @@ public static class CrashLabBuild
     [Serializable] public class Report
     {
         public string utc,unity;public bool passed;public List<string> checks=new List<string>();public List<Sample> samples=new List<Sample>();
-        public string scope="Single car versus static world. Numerical regression and rendered captures, not a handling-fun or BeamNG-fidelity certification.";
+        public string scope="Driving, staged crumple, two-car contacts and static-world impacts. Numerical regression and rendered captures, not a handling-fun or BeamNG-fidelity certification.";
     }
     static Report report;
     static void Check(bool pass,string message)
@@ -83,6 +83,7 @@ public static class CrashLabBuild
         {
             CrashLabRevisionChecks.Run(Check);
             CrashLabWheelChecks.Run(Check);
+            CrashLabCrumpleChecks.Run(Check);
             CrashLabTargetChecks.Run(lab,Check);
             Run(lab,250);var settled=Record(car,"settled");Capture(lab,"01-pristine");
             Check(car.structure.Finite(),"Stationary structure stays finite after five seconds.");
@@ -145,7 +146,7 @@ public static class CrashLabBuild
     {
         if(SystemInfo.graphicsDeviceType==UnityEngine.Rendering.GraphicsDeviceType.Null)return;
         lab.View.Refresh();var camera=lab.LabCamera;Vector3 center=lab.Active.Center;
-        Vector3 eye=center+new Vector3(-6,4.5f,6.8f);eye.x=Mathf.Clamp(eye.x,-22,22);eye.z=Mathf.Clamp(eye.z,-21.5f,21.5f);
+        Vector3 eye=center+new Vector3(-4.6f,3.2f,5.2f);eye.x=Mathf.Clamp(eye.x,-22,22);eye.z=Mathf.Clamp(eye.z,-21.5f,21.5f);
         camera.transform.position=eye;camera.transform.LookAt(center+Vector3.up*.25f);
         var target=new RenderTexture(1280,720,24);camera.targetTexture=target;camera.Render();RenderTexture.active=target;
         var image=new Texture2D(1280,720,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,1280,720),0,0);image.Apply();

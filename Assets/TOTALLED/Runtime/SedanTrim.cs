@@ -33,12 +33,26 @@ namespace Totalled
                 Add(end,new Vector4(.29f,.34f,.71f,.84f),black,"Grille / plate recess");
                 if(end==front)for(int line=0;line<4;line++)Add(end,new Vector4(.32f,.39f+line*.10f,.68f,.41f+line*.10f),chrome,"Grille bar");
                 else Add(end,new Vector4(.39f,.43f,.61f,.69f),Plate(),"License plate");
+                Add(end,new Vector4(.025f,.39f,.275f,.93f),black,"Lamp recess");
+                Add(end,new Vector4(.725f,.39f,.975f,.93f),black,"Lamp recess");
                 Add(end,new Vector4(.04f,.43f,.26f,.90f),end==front?head:tail,"Lamp lens");
                 Add(end,new Vector4(.74f,.43f,.96f,.90f),end==front?head:tail,"Lamp lens");
                 Add(end,new Vector4(.04f,.43f,.085f,.90f),end==front?amber:head,"Lamp indicator");
                 Add(end,new Vector4(.915f,.43f,.96f,.90f),end==front?amber:head,"Lamp indicator");
             }
             Frame(new[]{I(0,1,4),I(2,1,4),44,45},paint,black,glass,false);
+            foreach(float x in new[]{.17f,.57f})Add(new[]{I(0,1,4),I(2,1,4),44,45},new Vector4(x,.11f,x+.25f,.128f),black,"Windshield wiper");
+            var stamping=new Material(paint);stamping.color=new Color(.80f,.81f,.82f);
+            for(int panel=0;panel<2;panel++)
+            {
+                for(int face=0;face<4;face++)
+                {
+                    var q=car.panels[panel].faces[face];float u=face%2==0?.52f:.46f;
+                    Add(q,new Vector4(u,0,u+.014f,1),stamping,"Pressed bonnet ridge");
+                    if(panel==0&&face<2)for(int vent=0;vent<4;vent++)
+                        Add(q,new Vector4(.15f,.055f+vent*.024f,.85f,.068f+vent*.024f),black,"Cowl vent");
+                }
+            }
             Frame(new[]{I(2,1,2),I(0,1,2),42,43},paint,black,glass,false);
             for(int side=0;side<2;side++)
             {
@@ -67,10 +81,12 @@ namespace Totalled
         }
         static Material Plate()
         {
-            var material=SedanView.Material(new Color(.78f,.75f,.62f),0,.15f);var texture=new Texture2D(64,32,TextureFormat.RGB24,false);
-            for(int y=0;y<32;y++)for(int x=0;x<64;x++)
-            {bool border=x<3||x>60||y<3||y>28;bool letters=y>9&&y<23&&x>8&&x<55&&((x%9<2)||(y%11<2));texture.SetPixel(x,y,border||letters?new Color(.10f,.13f,.14f):Color.white);}
-            texture.Apply();material.mainTexture=texture;return material;
+            var material=SedanView.Material(new Color(.78f,.75f,.62f),0,.15f);var texture=new Texture2D(128,32,TextureFormat.RGB24,false);
+            for(int y=0;y<32;y++)for(int x=0;x<128;x++)texture.SetPixel(x,y,x<2||x>125||y<2||y>29?new Color(.15f,.17f,.16f):new Color(.92f,.91f,.85f));
+            string[] glyphs={"11111001000010000100001000010000100","10000100001000010000100001000011111","00000000000000011111000000000000000","01110100011001110101110011000101110","01110100011001110101110011000101110","01110100011000101110100011000101110"};
+            for(int letter=0;letter<glyphs.Length;letter++)for(int row=0;row<7;row++)for(int col=0;col<5;col++)
+                if(glyphs[letter][row*5+col]=='1')for(int dy=0;dy<2;dy++)for(int dx=0;dx<2;dx++)texture.SetPixel(23+letter*14+col*2+dx,23-row*2+dy,new Color(.07f,.10f,.11f));
+            texture.Apply();texture.filterMode=FilterMode.Bilinear;material.mainTexture=texture;return material;
         }
         static int I(int x,int y,int z)=>SacrificialSedan.Index(x,y,z);
         void Add(int[] nodes,Vector4 rect,Material mat,string name)
@@ -81,7 +97,7 @@ namespace Totalled
             bool isGlass=name=="Breakable glass";
             if(isGlass)go.GetComponent<MeshRenderer>().shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
             float[] edges=new float[4];for(int i=0;i<4;i++)edges[i]=Vector3.Distance(SedanShape.Position(car,nodes[i]),SedanShape.Position(car,nodes[(i+1)%4]));
-            patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,glass=isGlass,edges=edges,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider"||name=="Lamp indicator"||name=="Glass seal")?.027f:.014f});
+            patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,glass=isGlass,edges=edges,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider"||name=="Lamp indicator"||name=="Glass seal")?.027f:name=="Lamp recess"?.008f:name=="Pressed bonnet ridge"||name=="Cowl vent"?.048f:.014f});
         }
         public void Refresh(bool visible)
         {
