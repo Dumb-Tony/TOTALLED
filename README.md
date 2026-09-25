@@ -1,5 +1,7 @@
 # TOTALLED — Crash Lab
 
+[**Play in your browser**](https://dumb-tony.github.io/TOTALLED/) · [Windows download](https://github.com/Dumb-Tony/TOTALLED/releases/latest) · [Report a playtest bug](https://github.com/Dumb-Tony/TOTALLED/issues/new)
+
 Local Unity 6.6 technical prototype for persistent, deformable demolition-derby cars. Project: `C:\Dev\Unity\TOTALLED`. Unity version: **6000.6.0f1**. No purchased assets or external code dependencies.
 
 ## Play
@@ -43,3 +45,11 @@ Launch the Windows player with `-crashlab-smoke` for a ten-second unattended ren
 - `Docs/Design.md`: design intent, acceptance gate and precise limitations.
 
 **Current collision limit:** cars and their detached parts collide with the static lab, but not with each other. The full derby and physically interacting wreck pile are not implemented. See the design contract before interpreting this as a finished BeamNG-style system.
+
+## Publishing playtests
+
+The public source repository is `Dumb-Tony/TOTALLED`. The `gh-pages` branch hosts the browser build at **https://dumb-tony.github.io/TOTALLED/**. Share this playable URL as the primary handoff for playtesters.
+
+Use **TOTALLED → Build browser playtest**, or run `CrashLabPublish.BuildWeb` in batch mode with `-buildTarget WebGL`. The output is `Builds/WebGL`; the build step installs the page from `Tools/Playtest/index.html`. Gzip with Unity's decompression fallback works without custom server headers. Publish the contents of that directory to the root of `gh-pages`, keeping `.nojekyll`.
+
+The browser build is the actual Unity simulation, not a rewritten browser approximation. Use a desktop browser with a keyboard and mouse. Mobile controls and multiplayer are not implemented. When reporting bugs, include your browser, impact sequence, and whether you used recovery or spawned additional specimens.

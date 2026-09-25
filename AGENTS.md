@@ -8,3 +8,4 @@ The node graph is the source of truth. Never heal node positions or beam rest le
 
 Keep solver, sedan definition, rendering, lab UI and editor verification separate. Document approximations honestly. Run CrashLabBuild.Verify in batch mode after physics changes, inspect Artifacts/verification.json, and visually inspect the capture set when rendering changes. Passing numerical checks does not prove the handling feels good.
 
+User delivery preference: publish playtests on GitHub and give the shareable playable GitHub Pages URL as the primary link, not local launchers. Source: https://github.com/Dumb-Tony/TOTALLED . Play: https://dumb-tony.github.io/TOTALLED/ . Build browser output with CrashLabPublish.BuildWeb, publish it on gh-pages, verify the live page, and keep Windows downloads under GitHub Releases. The user's publication request authorizes this workflow.

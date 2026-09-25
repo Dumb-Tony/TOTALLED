@@ -1,6 +1,6 @@
 # Crash Lab validation — 24 September 2026
 
-Unity 6000.6.0f1. Tested in the real Unity physics environment, using procedural static walls, barriers and ground. Source is committed locally; no remote repository or publishing is configured.
+Unity 6000.6.0f1. Tested in the real Unity physics environment, using procedural static walls, barriers and ground. Source is published at https://github.com/Dumb-Tony/TOTALLED and browser playtests use https://dumb-tony.github.io/TOTALLED/.
 
 ## Numerical regression
 
