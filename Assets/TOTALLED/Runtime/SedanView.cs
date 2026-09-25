@@ -22,6 +22,7 @@ namespace Totalled
         readonly Vector3[] originalPositions;
         readonly HashSet<int[]> tornFaces = new HashSet<int[]>();
         readonly SedanTrim trim;
+        readonly SedanInterior interior;
         public bool bodyVisible = true, debugVisible, componentsVisible;
         public int debugMode;
         public static Material Material(Color color, float metallic=0, float smoothness=.3f)
@@ -36,7 +37,7 @@ namespace Totalled
             nodePlastic=new float[car.structure.nodes.Count];nodeSpan=new float[nodePlastic.Length];
             originalPositions=new Vector3[nodePlastic.Length];
             for(int i=0;i<originalPositions.Length;i++) originalPositions[i]=car.structure.nodes[i].position;
-            paint=CrashLabArt.Surface(color??new Color(.58f,.22f,.12f),2);rubber=CrashLabArt.Surface(new Color(.10f,.105f,.11f),3);steel=Material(new Color(.42f,.44f,.43f),.6f);
+            paint=SedanShape.Paint(color??new Color(.43f,.14f,.095f));rubber=CrashLabArt.Surface(new Color(.10f,.105f,.11f),3);steel=Material(new Color(.42f,.44f,.43f),.6f);
             creased=Material(new Color(.37f,.24f,.11f),.25f,.12f);
             nodeMat=Material(new Color(.2f,1,.83f));componentMat=Material(new Color(.15f,.65f,.85f));
             shellMesh=NewMesh("Node skinned body",paint,out shellRenderer);
@@ -50,6 +51,8 @@ namespace Totalled
             foreach(var w in car.wheels)
             {
                 var tire=Primitive(PrimitiveType.Cylinder,w.name+" tire",rubber);wheelObjects.Add(tire);
+                tire.GetComponent<MeshFilter>().sharedMesh=SedanWheelMesh.Tire();
+                tire.GetComponent<MeshRenderer>().sharedMaterials=new[]{rubber,Material(new Color(.045f,.049f,.05f),0,.16f)};
                 var rim=Primitive(PrimitiveType.Cylinder,w.name+" rim",steel);rimObjects.Add(rim);
                 foreach(float side in new[]{-1.01f,1.01f})for(int spoke=0;spoke<6;spoke++)
                 {
@@ -58,11 +61,16 @@ namespace Totalled
                     slot.localPosition=new Vector3(Mathf.Sin(angle)*.32f,side,Mathf.Cos(angle)*.32f);
                     slot.localRotation=Quaternion.Euler(0,spoke*60,0);slot.localScale=new Vector3(.12f,.025f,.19f);
                 }
+                foreach(float side in new[]{-1.035f,1.035f})for(int bolt=0;bolt<5;bolt++)
+                {
+                    var lug=Primitive(PrimitiveType.Cylinder,"Wheel lug",steel);lug.SetParent(rim,false);
+                    float angle=bolt*Mathf.PI*2/5;lug.localPosition=new Vector3(Mathf.Sin(angle)*.16f,side,Mathf.Cos(angle)*.16f);lug.localScale=new Vector3(.055f,.04f,.055f);
+                }
             }
             foreach(var n in car.structure.nodes) nodeObjects.Add(Primitive(PrimitiveType.Sphere,"Mass node",nodeMat));
             foreach(var p in car.parts) componentObjects.Add(Primitive(PrimitiveType.Cube,p.name,componentMat));
             for(int i=0;i<4;i++) pillars.Add(Primitive(PrimitiveType.Cylinder,"Cabin pillar",steel));
-            trim=new SedanTrim(car,root.transform);
+            trim=new SedanTrim(car,root.transform);interior=new SedanInterior(car,root.transform);
             Refresh();
         }
         Mesh NewMesh(string name, Material mat, out MeshRenderer renderer)
@@ -96,6 +104,7 @@ namespace Totalled
                 float strain=0;foreach(int n in q)strain+=nodePlastic[n];
                 var triangles=strain/q.Length>.02f?damaged:intact;
                 var n0=car.structure.nodes[q[0]];var n1=car.structure.nodes[q[1]];var n2=car.structure.nodes[q[2]];var n3=car.structure.nodes[q[3]];
+                Vector3 p0=SedanShape.Position(car,q[0]),p1=SedanShape.Position(car,q[1]),p2=SedanShape.Position(car,q[2]),p3=SedanShape.Position(car,q[3]);
                 bool flank=q[0]<42&&q[1]<42&&q[2]<42&&q[3]<42&&Mathf.Abs(n0.original.x)>.8f&&Mathf.Abs(n0.original.x-n2.original.x)<.01f&&n1.original.y>n0.original.y;
                 if(flank)
                 {
@@ -105,26 +114,42 @@ namespace Totalled
                     {
                         float u=segment/8f,v=(segment+1)/8f;
                         float lo=Arch(Mathf.Lerp(n0.original.z,n3.original.z,u)),hi=Arch(Mathf.Lerp(n0.original.z,n3.original.z,v));
-                        var bottom0=Vector3.Lerp(n0.position,n3.position,u);var bottom1=Vector3.Lerp(n0.position,n3.position,v);
-                        var top0=Vector3.Lerp(n1.position,n2.position,u);var top1=Vector3.Lerp(n1.position,n2.position,v);
-                        Emit(vertices,uv,triangles,Vector3.Lerp(bottom0,top0,lo),top0,top1,Vector3.Lerp(bottom1,top1,hi));
+                        var bottom0=Vector3.Lerp(p0,p3,u);var bottom1=Vector3.Lerp(p0,p3,v);
+                        var top0=Vector3.Lerp(p1,p2,u);var top1=Vector3.Lerp(p1,p2,v);
+                                                for(int band=0;band<3;band++)
+                        {
+                            float a=Mathf.Lerp(lo,1,band/3f),b=Mathf.Lerp(lo,1,(band+1)/3f),c=Mathf.Lerp(hi,1,(band+1)/3f),d=Mathf.Lerp(hi,1,band/3f);
+                            Vector3 right=car.Right*Mathf.Sign((n0.original-car.structure.nodes[19].original).x);
+                            Vector2 base0=SurfaceUV(n0.original,n0.original,n2.original),base1=SurfaceUV(n3.original,n0.original,n2.original);
+                            float z0=Mathf.Lerp(base0.x,base1.x,u),z1=Mathf.Lerp(base0.x,base1.x,v);
+                            Emit(vertices,uv,triangles,Side(bottom0,top0,right,a),Side(bottom0,top0,right,b),Side(bottom1,top1,right,c),Side(bottom1,top1,right,d),new[]{new Vector2(z0,a),new Vector2(z0,b),new Vector2(z1,c),new Vector2(z1,d)});
+                        }
                     }
                 }
-                else Emit(vertices,uv,triangles,n0.position,n1.position,n2.position,n3.position);
+                else Emit(vertices,uv,triangles,p0,p1,p2,p3,new[]{SurfaceUV(n0.original,n0.original,n2.original),SurfaceUV(n1.original,n0.original,n2.original),SurfaceUV(n2.original,n0.original,n2.original),SurfaceUV(n3.original,n0.original,n2.original)});
             }
             mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.subMeshCount=2;mesh.SetTriangles(intact,0);mesh.SetTriangles(damaged,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
         }
+        static Vector3 Side(Vector3 bottom,Vector3 top,Vector3 right,float t)
+        {return Vector3.Lerp(bottom,top,t)+right*(Mathf.Sin(t*Mathf.PI)*.065f-.025f*(1-t));}
+        Vector2 SurfaceUV(Vector3 p,Vector3 a,Vector3 b)
+        {
+            Vector3 origin=car.structure.nodes[19].original-new Vector3(0,.58f,0);p-=origin;a-=origin;b-=origin;
+            if(Mathf.Abs(a.x-b.x)<.01f)return new Vector2((p.z+2.4f)/4.8f,(p.y-.58f)/.46f);
+            if(Mathf.Abs(a.z-b.z)<.01f)return new Vector2((p.x+.88f)/1.76f,(p.y-.58f)/.46f);
+            return new Vector2((p.x+.88f)/1.76f,(p.z+2.4f)/4.8f);
+        }
         static float Arch(float z)
         {float d=Mathf.Min(Mathf.Abs(z-1.6f),Mathf.Abs(z+1.6f));return d>=.46f?0:Mathf.Clamp01((.40f+Mathf.Sqrt(.46f*.46f-d*d)-.58f)/.46f);}
-        static void Emit(List<Vector3> vertices,List<Vector2> uv,List<int> triangles,Vector3 a,Vector3 b,Vector3 c,Vector3 d)
+        static void Emit(List<Vector3> vertices,List<Vector2> uv,List<int> triangles,Vector3 a,Vector3 b,Vector3 c,Vector3 d,Vector2[] coords)
         {
             int v=vertices.Count;vertices.AddRange(new[]{a,b,c,d,a,b,c,d});
-            uv.AddRange(new[]{Vector2.zero,Vector2.up,Vector2.one,Vector2.right,Vector2.zero,Vector2.up,Vector2.one,Vector2.right});
+            uv.AddRange(coords);uv.AddRange(coords);
             triangles.AddRange(new[]{v,v+1,v+2,v,v+2,v+3,v+6,v+5,v+4,v+7,v+6,v+4});
         }
         public void Refresh()
         {
-            trim?.Refresh(bodyVisible);
+            trim?.Refresh(bodyVisible);interior?.Refresh(bodyVisible);
             System.Array.Clear(nodePlastic,0,nodePlastic.Length);System.Array.Clear(nodeSpan,0,nodeSpan.Length);
             foreach(var beam in car.structure.beams)
             {nodePlastic[beam.a]+=beam.plastic;nodePlastic[beam.b]+=beam.plastic;nodeSpan[beam.a]+=beam.initial;nodeSpan[beam.b]+=beam.initial;}
@@ -151,7 +176,7 @@ namespace Totalled
             int[] anchors={SacrificialSedan.Index(0,1,2),SacrificialSedan.Index(2,1,2),SacrificialSedan.Index(2,1,4),SacrificialSedan.Index(0,1,4)};
             for(int i=0;i<4;i++)
             {
-                Vector3 a=car.structure.nodes[42+i].position,b=car.structure.nodes[anchors[i]].position;
+                Vector3 a=SedanShape.Position(car,42+i),b=SedanShape.Position(car,anchors[i]);
                 pillars[i].position=(a+b)*.5f;pillars[i].rotation=Quaternion.FromToRotation(Vector3.up,a-b);pillars[i].localScale=new Vector3(.065f,(a-b).magnitude*.5f,.065f);pillars[i].gameObject.SetActive(bodyVisible);
             }
             debugRenderer.enabled=debugVisible;
@@ -174,4 +199,3 @@ namespace Totalled
         { t.Add(v.Count);v.Add(a);c.Add(color);t.Add(v.Count);v.Add(b);c.Add(color); }
     }
 }
-

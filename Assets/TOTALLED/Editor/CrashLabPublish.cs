@@ -15,6 +15,11 @@ public static class CrashLabPublish
         PlayerSettings.WebGL.dataCaching=true;
         PlayerSettings.WebGL.nameFilesAsHashes=true;
         PlayerSettings.WebGL.memorySize=256;
+        // Avoid the bundled wasm23 engine archive relocation failure.
+        PlayerSettings.stripEngineCode=true;
+        PlayerSettings.WebGL.wasm2023=false;
+        PlayerSettings.WebGL.emscriptenArgs=string.Empty;
+        UnityEditor.WebGL.UserBuildSettings.codeOptimization=UnityEditor.WebGL.WasmCodeOptimization.RuntimeSpeed;
         Directory.CreateDirectory("Builds/WebGL");
         var result=BuildPipeline.BuildPlayer(new[]{"Assets/TOTALLED/Scenes/CrashLab.unity"},"Builds/WebGL",BuildTarget.WebGL,BuildOptions.None);
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Web build failed: "+result.summary.result);

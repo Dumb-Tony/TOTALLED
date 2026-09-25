@@ -154,7 +154,7 @@ namespace Totalled
                 float width=Screen.width/scale,height=Screen.height/scale;
                 GUI.color=new Color(.06f,.09f,.11f,.94f);GUI.DrawTexture(new Rect(18,18,265,116),Texture2D.whiteTexture);GUI.color=Color.white;
                 GUI.Label(new Rect(32,26,240,32),"TOTALLED",titleStyle);
-                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.5.1",smallStyle);
+                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.6",smallStyle);
                 GUI.Label(new Rect(32,88,240,28),$"{Mathf.Abs(Active.Speed)*3.6f:000} KM/H   {(paused?"PAUSED":Active.handbrake?"HANDBRAKE":Active.brake>0?"BRAKING":"SACRIFICIAL SEDAN")}",smallStyle);
                 GUI.color=new Color(.06f,.09f,.11f,.92f);GUI.DrawTexture(new Rect(18,height-90,Mathf.Min(690,width-36),72),Texture2D.whiteTexture);GUI.color=Color.white;
                 GUI.Label(new Rect(30,height-86,width-55,24),"WASD drive   SPACE handbrake   SHIFT brake   R recover   H telemetry",smallStyle);
@@ -189,6 +189,3 @@ namespace Totalled
         void OnDestroy() { Time.timeScale=1; }
     }
 }
-
-
-

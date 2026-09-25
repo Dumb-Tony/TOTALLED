@@ -5,7 +5,7 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.5.0`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.6.0`.
 
 ## Live checks — 0.2 (historical)
 
@@ -39,3 +39,7 @@ The public browser build loads and completes a two-way impact using 5. The teal 
 
 The public build loads with wheel openings, shaded windows, rear plates, corrected skid arcs, brick buildings and loading doors. No startup console errors were observed. Automated powered-driving checks confirm the actual tire and rim transforms rotate while preserving axle alignment. All 43 checks pass; Windows startup/crash smoke verification passes with no errors.
 
+
+## Build checks — 0.6
+
+All 45 numerical checks pass. Windows startup/crash smoke verification passes without errors. Intact and exposed-engine captures were inspected. The browser build targets standard WebAssembly because the bundled wasm23 engine archive failed with an invalid function relocation in Unity's serialization backend. Engine stripping remains enabled. The build script explicitly selects runtime-speed optimization.

@@ -18,6 +18,14 @@ public static class CrashLabBuild
         AssetDatabase.Refresh();
         string surface="Assets/TOTALLED/Resources/TOTALLED/Surface.mat";
         string debug="Assets/TOTALLED/Resources/TOTALLED/DebugLines.mat";
+        string glassPath="Assets/TOTALLED/Resources/TOTALLED/Glass.mat";
+        if(AssetDatabase.LoadAssetAtPath<Material>(glassPath)==null)
+        {
+            var glass=new Material(Shader.Find("Standard"));glass.color=new Color(.22f,.30f,.34f,.28f);
+            glass.SetFloat("_Mode",2);glass.SetInt("_SrcBlend",(int)UnityEngine.Rendering.BlendMode.SrcAlpha);glass.SetInt("_DstBlend",(int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            glass.SetInt("_ZWrite",0);glass.EnableKeyword("_ALPHABLEND_ON");glass.renderQueue=3000;glass.SetFloat("_Glossiness",.7f);glass.SetFloat("_Metallic",.15f);
+            AssetDatabase.CreateAsset(glass,glassPath);
+        }
         string skyPath="Assets/TOTALLED/Resources/TOTALLED/YardSky.mat";
         string textPath="Assets/TOTALLED/Resources/TOTALLED/YardText.mat";
         if(AssetDatabase.LoadAssetAtPath<Material>(textPath)==null)AssetDatabase.CreateAsset(new Material(Shader.Find("TOTALLED/DepthText")),textPath);
@@ -36,7 +44,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.5.1";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.6.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;
@@ -137,11 +145,19 @@ public static class CrashLabBuild
     {
         if(SystemInfo.graphicsDeviceType==UnityEngine.Rendering.GraphicsDeviceType.Null)return;
         lab.View.Refresh();var camera=lab.LabCamera;Vector3 center=lab.Active.Center;
-        camera.transform.position=center+new Vector3(-6,3.9f,6.8f);camera.transform.LookAt(center+Vector3.up*.25f);
+        Vector3 eye=center+new Vector3(-6,4.5f,6.8f);eye.x=Mathf.Clamp(eye.x,-22,22);eye.z=Mathf.Clamp(eye.z,-21.5f,21.5f);
+        camera.transform.position=eye;camera.transform.LookAt(center+Vector3.up*.25f);
         var target=new RenderTexture(1280,720,24);camera.targetTexture=target;camera.Render();RenderTexture.active=target;
         var image=new Texture2D(1280,720,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,1280,720),0,0);image.Apply();
         File.WriteAllBytes("Artifacts/"+name+".png",image.EncodeToPNG());camera.targetTexture=null;RenderTexture.active=null;
         UnityEngine.Object.DestroyImmediate(image);UnityEngine.Object.DestroyImmediate(target);
+    }
+    public static void VerifyVisuals()
+    {
+        CreateScene();var lab=UnityEngine.Object.FindFirstObjectByType<CrashLab>();lab.Initialize();
+        CrashLabWheelChecks.Run((passed,message)=>{Debug.Log((passed?"PASS: ":"FAIL: ")+message);if(!passed)throw new Exception(message);});
+        Run(lab,180);Capture(lab,"13-refined-sedan");
+        lab.Impact(0);Run(lab,160);Capture(lab,"14-exposed-engine");
     }
     [MenuItem("TOTALLED/Build Windows prototype")]
     public static void BuildWindows()
@@ -151,9 +167,3 @@ public static class CrashLabBuild
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Windows build failed: "+result.summary.result);
     }
 }
-
-
-
-
-
-

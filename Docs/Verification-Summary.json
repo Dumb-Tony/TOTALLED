@@ -1,5 +1,5 @@
 {
-  "utc": "2026-09-25T05:05:34.2162916Z",
+  "utc": "2026-09-25T05:34:14.8886115Z",
   "unity": "6000.6.0f1",
   "passed": true,
   "checks": [
@@ -15,6 +15,8 @@
     "PASS: Driving into the wall normally causes a lasting visible dent (0.085 m nose crush), without launch shortcuts.",
     "PASS: Powered driving visibly rotates both the tire mesh and detailed rim.",
     "PASS: Rolling tire stays aligned to its actual suspension axle.",
+    "PASS: Forward rolling moves the bottom tread backward relative to the hub.",
+    "PASS: Reverse rolling moves the bottom tread forward relative to the hub.",
     "PASS: Free-space impact conserves combined momentum within 2%, accounting for existing air damping.",
     "PASS: Two-car collision does not create net kinetic energy.",
     "PASS: Two-way vehicle contact remains finite and detects surface contacts.",

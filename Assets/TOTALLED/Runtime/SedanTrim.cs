@@ -15,12 +15,13 @@ namespace Totalled
             this.car=car;root=parent;
             var chrome=SedanView.Material(new Color(.56f,.58f,.56f),.6f,.4f);
             var black=CrashLabArt.Surface(new Color(.07f,.08f,.09f),3);
-            var glass=SedanView.Material(new Color(.17f,.25f,.28f),.25f,.65f);
-            var tint=new Texture2D(32,32,TextureFormat.RGB24,true);
-            for(int y=0;y<32;y++)for(int x=0;x<32;x++)
-            {float value=Mathf.Lerp(.45f,1.7f,y/31f);if(y>17&&y<20)value*=1.12f;tint.SetPixel(x,y,new Color(value*.78f,value*.9f,value));}
-            tint.Apply();glass.mainTexture=tint;
+            var glass=new Material(Resources.Load<Material>("TOTALLED/Glass"));
             var head=SedanView.Material(new Color(.87f,.81f,.59f),.1f,.4f);
+            var lens=new Texture2D(64,32,TextureFormat.RGB24,true);
+            for(int y=0;y<32;y++)for(int x=0;x<64;x++)
+            {float dx=(x-31.5f)/32,dy=(y-15.5f)/16;float value=Mathf.Clamp01(1.15f-Mathf.Sqrt(dx*dx+dy*dy)*.75f);value*=x%5==0?.65f:1;lens.SetPixel(x,y,new Color(value,value,value));}
+            lens.Apply();head.mainTexture=lens;
+            var amber=SedanView.Material(new Color(.67f,.29f,.035f),.1f,.3f);
             var tail=SedanView.Material(new Color(.50f,.065f,.025f),.1f,.35f);
             int[] front={I(0,0,6),I(2,0,6),I(2,1,6),I(0,1,6)};
             int[] back={I(2,0,0),I(0,0,0),I(0,1,0),I(2,1,0)};
@@ -32,6 +33,8 @@ namespace Totalled
                 else Add(end,new Vector4(.39f,.43f,.61f,.69f),Plate(),"License plate");
                 Add(end,new Vector4(.04f,.43f,.26f,.90f),end==front?head:tail,"Lamp lens");
                 Add(end,new Vector4(.74f,.43f,.96f,.90f),end==front?head:tail,"Lamp lens");
+                Add(end,new Vector4(.04f,.43f,.085f,.90f),end==front?amber:head,"Lamp indicator");
+                Add(end,new Vector4(.915f,.43f,.96f,.90f),end==front?amber:head,"Lamp indicator");
             }
             Add(new[]{I(0,1,4),I(2,1,4),44,45},new Vector4(.035f,.08f,.965f,.91f),glass,"Windshield");
             Add(new[]{I(2,1,2),I(0,1,2),42,43},new Vector4(.035f,.08f,.965f,.91f),glass,"Rear glass");
@@ -60,13 +63,13 @@ namespace Totalled
             var go=new GameObject(name);go.layer=2;go.transform.SetParent(root,false);
             var mesh=new Mesh();mesh.MarkDynamic();go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=mat;
             float span=0;for(int i=0;i<4;i++)span+=Vector3.Distance(car.structure.nodes[nodes[i]].position,car.structure.nodes[nodes[(i+1)%4]].position);
-            patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider")?.022f:.014f});
+            patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider"||name=="Lamp indicator")?.022f:.014f});
         }
         public void Refresh(bool visible)
         {
             foreach(var p in patches)
             {
-                var a=car.structure.nodes[p.nodes[0]].position;var b=car.structure.nodes[p.nodes[1]].position;var c=car.structure.nodes[p.nodes[2]].position;var d=car.structure.nodes[p.nodes[3]].position;
+                var a=SedanShape.Position(car,p.nodes[0]);var b=SedanShape.Position(car,p.nodes[1]);var c=SedanShape.Position(car,p.nodes[2]);var d=SedanShape.Position(car,p.nodes[3]);
                 if(Vector3.Distance(a,b)+Vector3.Distance(b,c)+Vector3.Distance(c,d)+Vector3.Distance(d,a)>p.maxSpan)p.torn=true;
                 p.go.SetActive(visible&&!p.torn);if(!visible||p.torn)continue;
                 Vector3 normal=Vector3.Cross(b-a,d-a).normalized;
@@ -79,5 +82,3 @@ namespace Totalled
         static Vector3 Point(Vector3 a,Vector3 b,Vector3 c,Vector3 d,float u,float v)=>Vector3.LerpUnclamped(Vector3.LerpUnclamped(a,b,u),Vector3.LerpUnclamped(d,c,u),v);
     }
 }
-
-
