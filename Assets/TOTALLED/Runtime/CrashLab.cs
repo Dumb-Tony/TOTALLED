@@ -94,7 +94,7 @@ namespace Totalled
             orbit=Input.GetMouseButton(1);
             if(orbit) { yaw+=Input.GetAxis("Mouse X")*3;pitch=Mathf.Clamp(pitch-Input.GetAxis("Mouse Y")*3,5,80); }
             distance=Mathf.Clamp(distance-Input.mouseScrollDelta.y,4,22);
-            Active.throttle=Input.GetAxisRaw("Vertical");Active.steering=Input.GetAxisRaw("Horizontal");Active.handbrake=Input.GetKey(KeyCode.Space);Active.brake=Input.GetKey(KeyCode.LeftControl)?1:0;
+            Active.throttle=Input.GetAxisRaw("Vertical");Active.steering=Input.GetAxisRaw("Horizontal");Active.handbrake=Input.GetKey(KeyCode.Space);Active.brake=Input.GetKey(KeyCode.LeftShift)||Input.GetKey(KeyCode.LeftControl)?1:0;
             foreach(var view in views) {view.bodyVisible=body;view.debugVisible=debug;view.debugMode=debugMode;view.componentsVisible=components;view.Refresh();}
             MoveCamera(false);
         }
@@ -124,9 +124,10 @@ namespace Totalled
             if(Active==null)return;
             if(titleStyle==null) { titleStyle=new GUIStyle(GUI.skin.label){fontSize=25,fontStyle=FontStyle.Bold};titleStyle.normal.textColor=new Color(1,.69f,.22f);textStyle=new GUIStyle(GUI.skin.label){fontSize=15};smallStyle=new GUIStyle(GUI.skin.label){fontSize=12}; }
             float scale=Mathf.Clamp(Screen.height/900f,.8f,1.5f);GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
-            GUI.Box(new Rect(18,18,360,405),GUIContent.none);
-            GUILayout.BeginArea(new Rect(32,27,335,390));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN",smallStyle);GUILayout.Space(12);
+            GUI.Box(new Rect(18,18,360,480),GUIContent.none);
+            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.2",smallStyle);GUILayout.Space(12);
             GUILayout.Label($"{Mathf.Abs(Active.Speed)*3.6f:0} km/h    {(paused?"PAUSED":slow?"SLOW MOTION":"LIVE")}",textStyle);
+            GUILayout.Label(Active.handbrake?"HANDBRAKE / REAR TIRES LOCKING":Active.brake>0?"BRAKE / FOUR-WHEEL STOP":"ROLLING / FULL TIRE GRIP",smallStyle);
             GUILayout.Label($"{Active.structure.nodes.Count} nodes  /  {Active.structure.beams.Count} beams",textStyle);
             GUILayout.Label($"Yielded {Active.structure.PlasticCount}   Broken {Active.structure.BrokenCount}",textStyle);
             GUILayout.Label($"Plastic travel {Active.structure.PlasticTotal:0.000} m",textStyle);
@@ -138,7 +139,7 @@ namespace Totalled
             float h=Screen.height/scale;
             GUI.Box(new Rect(18,h-157,630,139),GUIContent.none);
             GUILayout.BeginArea(new Rect(32,h-150,605,128));
-            GUILayout.Label("WASD drive  •  SPACE handbrake  •  CTRL brake",textStyle);
+            GUILayout.Label("WASD drive  •  SPACE handbrake  •  SHIFT brake",textStyle);
             GUILayout.Label($"1 front / 2 rear / 3 side / 4 pole • [ ] speed {LaunchSpeed*3.6f:0} km/h",textStyle);
             GUILayout.Label("R recover, keep damage  •  N new car, keep wreck",smallStyle);
             GUILayout.Label("P pause  •  . step  •  T slow motion  •  B body  •  V skeleton",smallStyle);

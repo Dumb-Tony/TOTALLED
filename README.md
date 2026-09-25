@@ -11,7 +11,7 @@ Open the project in Unity, open `Assets/TOTALLED/Scenes/CrashLab.unity`, and pre
 | Control | Action |
 |---|---|
 | WASD / arrow keys | Throttle, reverse, steer |
-| Space / left Ctrl | Rear handbrake / all-wheel brake |
+| Space / left Shift (or left Ctrl) | Rear handbrake / all-wheel brake |
 | 1 / 2 / 3 / 4 | Launch same damaged specimen into front / rear / side wall / offset pole |
 | [ / ] | Decrease / increase laboratory launch speed |
 | R | Upright and relocate connected structure; preserve all damage |
@@ -53,3 +53,4 @@ The public source repository is `Dumb-Tony/TOTALLED`. The `gh-pages` branch host
 Use **TOTALLED → Build browser playtest**, or run `CrashLabPublish.BuildWeb` in batch mode with `-buildTarget WebGL`. The output is `Builds/WebGL`; the build step installs the page from `Tools/Playtest/index.html`. Gzip with Unity's decompression fallback works without custom server headers. Publish the contents of that directory to the root of `gh-pages`, keeping `.nojekyll`.
 
 The browser build is the actual Unity simulation, not a rewritten browser approximation. Use a desktop browser with a keyboard and mouse. Mobile controls and multiplayer are not implemented. When reporting bugs, include your browser, impact sequence, and whether you used recovery or spawned additional specimens.
+

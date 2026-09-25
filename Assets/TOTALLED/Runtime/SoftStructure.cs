@@ -20,6 +20,9 @@ namespace Totalled
         public int a, b;
         public float rest, initial, compliance, yield, failure, plastic, stress, lambda;
         public bool broken, mount;
+        public int attachment = -1;
+        public float plasticRate = 24;
+        public float damping = .08f;
         public Beam(int a, int b, float length, float compliance, float yield, float failure, bool mount)
         { this.a = a; this.b = b; rest = initial = length; this.compliance = compliance; this.yield = yield; this.failure = failure; this.mount = mount; }
     }
@@ -36,6 +39,7 @@ namespace Totalled
         public readonly List<MassNode> nodes = new List<MassNode>();
         public readonly List<Beam> beams = new List<Beam>();
         public readonly List<ContactSample> contacts = new List<ContactSample>();
+        readonly List<int[]> attachments = new List<int[]>();
         public int Substeps = 10, Iterations = 8;
         public float PeakImpact, Time;
         public double PlasticWork;
@@ -52,6 +56,16 @@ namespace Totalled
             return beams.Count - 1;
         }
         public int BrokenCount { get { int n = 0; foreach (var b in beams) if (b.broken) n++; return n; } }
+        public void GroupAttachment(int[] members)
+        {
+            int id=attachments.Count;attachments.Add(members);
+            foreach(int i in members) beams[i].attachment=id;
+        }
+        void Fracture(Beam beam)
+        {
+            beam.broken=true;
+            if(beam.attachment>=0)foreach(int i in attachments[beam.attachment])beams[i].broken=true;
+        }
         public int PlasticCount { get { int n = 0; foreach (var b in beams) if (b.plastic > .002f) n++; return n; } }
         public float PlasticTotal { get { float n = 0; foreach (var b in beams) n += b.plastic; return n; } }
 
@@ -92,6 +106,14 @@ namespace Totalled
                         float error = len - b.rest;
                         float alpha = b.compliance / (h * h);
                         float dl = (-error - alpha * b.lambda) / (a.inverseMass + z.inverseMass + alpha);
+                        if(!b.mount)
+                        {
+                            // A yielded member cannot keep applying an unbounded elastic
+                            // restoring impulse. Limit its load so impact motion can crush
+                            // the structure; the dissipative return below retains that shape.
+                            float limit=b.yield*Mathf.Max(.3f,b.initial)/2e-6f*h*h*1.8f;
+                            dl=Mathf.Clamp(b.lambda+dl,-limit,limit)-b.lambda;
+                        }
                         b.lambda += dl;
                         Vector3 correction = d / len * dl;
                         a.position -= correction * a.inverseMass;
@@ -110,10 +132,15 @@ namespace Totalled
                     float magnitude = Mathf.Abs(elasticStrain);
                     float geometricStrain = Mathf.Abs(Vector3.Distance(nodes[b.a].position,nodes[b.b].position)-b.rest)/b.initial;
                     if ((b.mount ? magnitude > b.failure : geometricStrain > b.failure) || b.plastic > b.initial * .5f)
-                    { b.broken = true; continue; }
+                    { Fracture(b); continue; }
                     if (magnitude > b.yield)
                     {
-                        float change = Mathf.Sign(elasticStrain) * Mathf.Min(magnitude - b.yield, .9f) * b.initial * 24 * h;
+                        float change = Mathf.Sign(elasticStrain) * Mathf.Min(magnitude - b.yield, .9f) * b.initial * b.plasticRate * h;
+                        // Return toward the actual strained length, never past it.
+                        // Force-based flow without this bound can inject energy into
+                        // stiff bracing and trigger runaway failure of the entire car.
+                        float error=Vector3.Distance(nodes[b.a].position,nodes[b.b].position)-b.rest;
+                        change=Mathf.Sign(change)==Mathf.Sign(error)?Mathf.Sign(error)*Mathf.Min(Mathf.Abs(change),Mathf.Abs(error)):0;
                         float next = Mathf.Clamp(b.rest + change, b.initial * .32f, b.initial * 1.65f);
                         float amount = Mathf.Abs(next - b.rest);
                         b.rest = next; b.plastic += amount; PlasticWork += amount * Mathf.Abs(force);
@@ -142,7 +169,7 @@ namespace Totalled
                     var a = nodes[b.a]; var z = nodes[b.b];
                     Vector3 axis = (z.position - a.position).normalized;
                     float speed = Vector3.Dot(z.velocity - a.velocity, axis);
-                    float impulse = speed * .08f / (a.inverseMass + z.inverseMass);
+                    float impulse = speed * b.damping / (a.inverseMass + z.inverseMass);
                     a.velocity += axis * impulse * a.inverseMass;
                     z.velocity -= axis * impulse * z.inverseMass;
                 }
@@ -172,13 +199,10 @@ namespace Totalled
             }
         }
 
-        public void Relocate(Vector3 target, Quaternion rotation, int chassisCount)
+        public void Relocate(Vector3 target, Quaternion rotation, Vector3 center, int rootIndex)
         {
-            Vector3 center = Vector3.zero;
-            for (int i = 0; i < chassisCount; i++) center += nodes[i].position;
-            center /= chassisCount;
             // Only relocate still-connected structure. Detached debris stays in the lab.
-            var linked = new HashSet<int>(); var queue = new Queue<int>(); linked.Add(0); queue.Enqueue(0);
+            var linked = new HashSet<int>(); var queue = new Queue<int>(); linked.Add(rootIndex); queue.Enqueue(rootIndex);
             while (queue.Count > 0)
             {
                 int i = queue.Dequeue();

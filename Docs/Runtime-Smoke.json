@@ -1,9 +1,9 @@
 {
     "passed": true,
     "offscreenCaptures": 2,
-    "brokenBeams": 0,
-    "seconds": 9.988903045654297,
-    "accumulatedPlasticTravel": 2.3753204345703125,
+    "brokenBeams": 18,
+    "seconds": 9.991186141967773,
+    "accumulatedPlasticTravel": 13.382865905761719,
     "scope": "Hidden standalone player, explicit camera renders; excludes screen-space HUD and interactive framerate measurement.",
     "errors": []
 }

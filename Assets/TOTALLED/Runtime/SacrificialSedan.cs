@@ -10,7 +10,7 @@ namespace Totalled
         public int hub, front, rear, upper;
         public readonly List<int> links = new List<int>();
         public bool steering, driven, punctured;
-        public float radius = .36f, rimBend, compression, spin;
+        public float radius = .36f, rimBend, compression, spin, rearLock;
         public Vector3 forward, up;
         public int LiveLinks(SoftStructure s) { int c = 0; foreach (int b in links) if (!s.beams[b].broken) c++; return c; }
     }
@@ -18,6 +18,7 @@ namespace Totalled
     {
         public string name;
         public int[] nodes, mounts;
+        public readonly List<int[]> faces = new List<int[]>();
         public int LiveMounts(SoftStructure s) { int c = 0; foreach (int b in mounts) if (!s.beams[b].broken) c++; return c; }
     }
     public sealed class MechanicalPart
@@ -40,11 +41,11 @@ namespace Totalled
         public float throttle, steering, brake, temperature = 80, fuel = 1;
         public float DriveForceLastStep, DistanceTravelled;
         public bool handbrake;
-        public Vector3 Center { get { Vector3 p = Vector3.zero; for (int i = 0; i < chassisCount; i++) p += structure.nodes[i].position; return p / chassisCount; } }
+        public Vector3 Center { get { Vector3 p = Vector3.zero; for (int i = 12; i < 30; i++) p += structure.nodes[i].position; return p / 18; } }
         public Vector3 Forward => ((structure.nodes[Index(1,0,4)].position - structure.nodes[Index(1,0,2)].position)).normalized;
         public Vector3 Right => (structure.nodes[Index(2,0,3)].position - structure.nodes[Index(0,0,3)].position).normalized;
         public Vector3 Up => Vector3.Cross(Forward, Right).normalized;
-        public Vector3 Velocity { get { Vector3 v = Vector3.zero; for (int i = 0; i < chassisCount; i++) v += structure.nodes[i].velocity; return v / chassisCount; } }
+        public Vector3 Velocity { get { Vector3 v = Vector3.zero; for (int i = 12; i < 30; i++) v += structure.nodes[i].velocity; return v / 18; } }
         public float Speed => Vector3.Dot(Velocity, Forward);
         public Quaternion Orientation => Forward.sqrMagnitude > .5f && Up.sqrMagnitude > .5f ? Quaternion.LookRotation(Forward, Up) : Quaternion.identity;
         public static int Index(int x, int y, int z) => z * 6 + y * 3 + x;
@@ -64,7 +65,8 @@ namespace Totalled
                     if (Mathf.Abs(d.x) <= .84f && Mathf.Abs(d.y) <= .47f && Mathf.Abs(d.z) <= .81f)
                     {
                         bool end = a / 6 <= 1 || b / 6 >= 5;
-                        structure.AddBeam(a, b, end ? 2e-8f : 6e-9f, end ? .085f : .15f, end ? .85f : 1.6f);
+                        int beam=structure.AddBeam(a, b, end ? 2e-8f : 6e-9f, end ? .017f : .15f, end ? .85f : 1.6f);
+                        structure.beams[beam].plasticRate=end?120:24;
                     }
                 }
             // Rendered lower shell uses the exact collision / structural nodes.
@@ -115,11 +117,37 @@ namespace Totalled
         void Part(string name,int a,int b,float sensitivity) { parts.Add(new MechanicalPart { name=name,a=a,b=b,span=Vector3.Distance(structure.nodes[a].position,structure.nodes[b].position),sensitivity=sensitivity }); }
         void Panel(string name,Vector3 origin,Vector3[] points,int[] anchors)
         {
-            var p=new BodyPanel {name=name,nodes=new int[4],mounts=new int[3]};
-            for(int i=0;i<4;i++) p.nodes[i]=structure.AddNode(origin+points[i],5,.06f);
-            for(int i=0;i<4;i++) for(int j=i+1;j<4;j++) structure.AddBeam(p.nodes[i],p.nodes[j],1e-7f,.12f,1.3f);
-            // Two stronger hinge points and a weaker latch. Each mount can fail independently.
-            for(int i=0;i<3;i++) p.mounts[i]=structure.AddBeam(p.nodes[i],anchors[i],2e-8f,i==2?.12f:.3f,i==2?.4f:1.1f,true);
+            var p=new BodyPanel {name=name,nodes=new int[10],mounts=new int[3]};
+            Vector3 center=(points[0]+points[1]+points[2]+points[3])*.25f;
+            Vector3 normal=Vector3.Cross(points[1]-points[0],points[3]-points[0]).normalized;
+            if(Vector3.Dot(normal,center-new Vector3(0,.65f,0))<0)normal=-normal;
+            // A supported sheet, not a floppy coplanar four-point truss. The inner
+            // reinforcement adds bending stiffness while all rest lengths can yield.
+            for(int row=0;row<3;row++)for(int col=0;col<3;col++)
+            {
+                Vector3 a=Vector3.Lerp(points[0],points[1],col*.5f),b=Vector3.Lerp(points[3],points[2],col*.5f);
+                p.nodes[row*3+col]=structure.AddNode(origin+Vector3.Lerp(a,b,row*.5f),2,.055f);
+            }
+            p.nodes[9]=structure.AddNode(origin+center-normal*.18f,2,.045f);
+            for(int i=0;i<9;i++)
+            {
+                int brace=structure.AddBeam(p.nodes[i],p.nodes[9],3e-9f,.07f,1.3f);structure.beams[brace].damping=.3f;
+                for(int j=i+1;j<9;j++)if(Mathf.Abs(i%3-j%3)<=1&&Mathf.Abs(i/3-j/3)<=1)
+                {int edge=structure.AddBeam(p.nodes[i],p.nodes[j],3e-9f,.065f,1.3f);structure.beams[edge].damping=.2f;}
+            }
+            for(int row=0;row<2;row++)for(int col=0;col<2;col++)
+            {int i=row*3+col;p.faces.Add(new[]{p.nodes[i],p.nodes[i+1],p.nodes[i+4],p.nodes[i+3]});}
+            int[] corners={0,2,8};
+            // Each hinge/latch is one physical mount with a triangulated attachment.
+            // Break the whole attachment when one brace fails; no invisible tethers.
+            for(int i=0;i<3;i++)
+            {
+                int anchor=anchors[i];int x=anchor%3, y=(anchor/3)%2, z=anchor/6;
+                int[] supports={anchor,Index(1,y,z),Index(x,1-y,z)};
+                var group=new int[3];
+                for(int k=0;k<3;k++)group[k]=structure.AddBeam(p.nodes[corners[i]],supports[k],2e-9f,i==2?.12f:.24f,i==2?.22f:.50f,true);
+                structure.GroupAttachment(group);p.mounts[i]=group[0];
+            }
             panels.Add(p);
         }
         public void Tick(float dt)
@@ -155,6 +183,7 @@ namespace Totalled
                 w.rimBend=Mathf.Max(w.rimBend,Mathf.Max(0,Mathf.Abs(mountDist-.67f)-.2f));
                 if(w.rimBend>.23f) w.punctured=true;
                 w.compression=0;
+                w.rearLock=Mathf.MoveTowards(w.rearLock,handbrake&&!w.steering?1:0,dt*(handbrake?9:5));
                 if(links<2) continue; // A hanging wheel cannot transmit useful drive torque.
                 if(!Physics.Raycast(hub.position, -up, out RaycastHit hit,w.radius+.08f,1<<0,QueryTriggerInteraction.Ignore)) continue;
                 if(Vector3.Dot(hit.normal,up)<.25f) continue;
@@ -163,15 +192,21 @@ namespace Totalled
                 Vector3 lateral=Vector3.Cross(hit.normal,f).normalized;
                 float longitudinal=Vector3.Dot(hub.velocity,f), slip=Vector3.Dot(hub.velocity,lateral);
                 float grip=w.punctured?1300:3200;
-                float sideForce=Mathf.Clamp(-slip*1900,-grip,grip);
-                float drive=w.driven?throttle*power*2900:0;
+                // A locked rear tire slides sideways. Service braking keeps cornering
+                // grip on all four tires; neither path injects artificial yaw torque.
+                float sideGrip=grip*Mathf.Lerp(1,.18f,w.rearLock);
+                float corneringStiffness=Mathf.Lerp(1900,300,w.rearLock);
+                float sideForce=Mathf.Clamp(-slip*corneringStiffness,-sideGrip,sideGrip);
+                float service=Mathf.Clamp01(brake);
+                float drive=w.driven?throttle*power*2900*(1-service)*(1-w.rearLock):0;
                 drive*=Mathf.Clamp01((32-Mathf.Abs(longitudinal))/8);
-                float stop=(brake+(handbrake&&!w.steering?1:0))*Mathf.Clamp(-longitudinal*2200,-4200,4200);
+                float brakeCapacity=Mathf.Max(service*grip*(w.steering?1.18f:.96f),w.rearLock*grip*.78f);
+                float stop=Mathf.Clamp(-longitudinal*2200,-brakeCapacity,brakeCapacity);
                 Vector3 force=f*(drive+stop-longitudinal*(w.punctured?130:35))+lateral*sideForce;
                 force=Vector3.ClampMagnitude(force,grip*1.3f);
                 hub.force+=force;
                 DriveForceLastStep+=Mathf.Abs(drive)*dt;
-                w.spin+=longitudinal/w.radius*dt;
+                w.spin+=longitudinal/w.radius*dt*(1-w.rearLock);
             }
         }
         public void Launch(Vector3 velocity)
@@ -183,6 +218,9 @@ namespace Totalled
             foreach(int i in connected) structure.nodes[i].velocity=velocity;
         }
         public void Recover(Vector3 target)
-        { structure.Relocate(target,Quaternion.Inverse(Orientation),chassisCount); }
+        { structure.Relocate(target,Quaternion.Inverse(Orientation),Center,Index(1,0,3)); }
     }
 }
+
+
+

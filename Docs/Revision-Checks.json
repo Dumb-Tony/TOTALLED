@@ -1,0 +1,56 @@
+{
+    "idleMotion": 0.00006870272773085162,
+    "idleShapeError": 0.007150563411414623,
+    "drivenImpactPlasticTravel": 2.5908992290496826,
+    "drivenImpactNoseCrush": 0.08507704734802246,
+    "maneuvers": [
+        {
+            "mode": "straight / coast",
+            "speed": 11.763937950134277,
+            "distance": 16.536785125732422,
+            "yaw": 0.03426402062177658,
+            "slipAngle": 0.0010679018450900912,
+            "finite": true
+        },
+        {
+            "mode": "straight / foot brake",
+            "speed": 0.8914380073547363,
+            "distance": 9.565433502197266,
+            "yaw": 0.09891171753406525,
+            "slipAngle": 0.016558395698666573,
+            "finite": true
+        },
+        {
+            "mode": "straight / handbrake",
+            "speed": 7.853512287139893,
+            "distance": 14.171472549438477,
+            "yaw": 0.07661668211221695,
+            "slipAngle": 0.02988862432539463,
+            "finite": true
+        },
+        {
+            "mode": "turn / coast",
+            "speed": 10.876895904541016,
+            "distance": 15.662881851196289,
+            "yaw": 39.58224868774414,
+            "slipAngle": 1.0770386457443237,
+            "finite": true
+        },
+        {
+            "mode": "turn / foot brake",
+            "speed": 0.9877085089683533,
+            "distance": 9.728048324584961,
+            "yaw": 17.91915512084961,
+            "slipAngle": 0.651526689529419,
+            "finite": true
+        },
+        {
+            "mode": "turn / handbrake",
+            "speed": 5.861791133880615,
+            "distance": 13.193138122558594,
+            "yaw": 84.38886260986328,
+            "slipAngle": 65.42504119873047,
+            "finite": true
+        }
+    ]
+}
