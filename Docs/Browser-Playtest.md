@@ -68,3 +68,4 @@ Deployment verification: GitHub Pages reports the 0.8 deployment built successfu
 All 64 physics checks pass. Left/right T-bones leave 0.166 / 0.171 m permanent door dents relative to each door's corner plane. The swept-node hierarchy matches exhaustive candidates over 200 incremental updates. Collision timing across three 150-tick scenarios averages 9.04–10.87 ms, with 95th percentiles 11.31–11.70 ms. These are editor physics timings, not browser FPS.
 
 The packaged Windows smoke test passes with three captures, two engine audio sources, tire scrub audio, 648 skid vertices and no errors. Side-impact and packaged damaged captures were visually inspected. Browser interaction automation still cannot initialize; publication is checked through live version and asset hashes.
+Deployment verified: GitHub Pages built commit 6379a48 successfully. The live 0.8.1 page references four assets that all return HTTP 200 and match the local tested build by SHA-256.
