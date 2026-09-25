@@ -13,16 +13,19 @@ public static class CrashLabPublish
         PlayerSettings.WebGL.compressionFormat=WebGLCompressionFormat.Gzip;
         PlayerSettings.WebGL.decompressionFallback=true;
         PlayerSettings.WebGL.dataCaching=true;
+        PlayerSettings.WebGL.nameFilesAsHashes=true;
         PlayerSettings.WebGL.memorySize=256;
         Directory.CreateDirectory("Builds/WebGL");
         var result=BuildPipeline.BuildPlayer(new[]{"Assets/TOTALLED/Scenes/CrashLab.unity"},"Builds/WebGL",BuildTarget.WebGL,BuildOptions.None);
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Web build failed: "+result.summary.result);
         string build="Builds/WebGL/Build";
+        string generated=File.ReadAllText("Builds/WebGL/index.html");
+        Func<string,string> asset=pattern=>Path.GetFileName(Directory.GetFiles(build,pattern).Single(file=>generated.Contains(Path.GetFileName(file))));
         string page=File.ReadAllText("Tools/Playtest/index.html");
-        page=page.Replace("__LOADER__",Path.GetFileName(Directory.GetFiles(build,"*.loader.js").Single()))
-            .Replace("__DATA__",Path.GetFileName(Directory.GetFiles(build,"*.data*").Single()))
-            .Replace("__FRAMEWORK__",Path.GetFileName(Directory.GetFiles(build,"*.framework.js*").Single()))
-            .Replace("__WASM__",Path.GetFileName(Directory.GetFiles(build,"*.wasm*").Single()));
+        page=page.Replace("__LOADER__",asset("*.loader.js"))
+            .Replace("__DATA__",asset("*.data*"))
+            .Replace("__FRAMEWORK__",asset("*.framework.js*"))
+            .Replace("__WASM__",asset("*.wasm*"));
         File.WriteAllText("Builds/WebGL/index.html",page);
         File.WriteAllText("Builds/WebGL/.nojekyll","");
     }
