@@ -21,6 +21,8 @@ namespace Totalled
         readonly float[] nodePlastic, nodeSpan;
         readonly Vector3[] originalPositions;
         readonly HashSet<int[]> tornFaces = new HashSet<int[]>();
+        readonly List<int> insideFaces=new List<int>();
+        bool reverseFace;
         readonly SedanTrim trim;
         readonly SedanInterior interior;
         public bool bodyVisible = true, debugVisible, componentsVisible;
@@ -38,11 +40,12 @@ namespace Totalled
             originalPositions=new Vector3[nodePlastic.Length];
             for(int i=0;i<originalPositions.Length;i++) originalPositions[i]=car.structure.nodes[i].position;
             paint=SedanShape.Paint(color??new Color(.43f,.14f,.095f));rubber=CrashLabArt.Surface(new Color(.10f,.105f,.11f),3);steel=Material(new Color(.42f,.44f,.43f),.6f);
-            creased=Material(new Color(.37f,.24f,.11f),.25f,.12f);
+            creased=new Material(paint);creased.color=new Color(.73f,.76f,.78f);creased.SetFloat("_Glossiness",.14f);creased.SetFloat("_Metallic",.12f);
             nodeMat=Material(new Color(.2f,1,.83f));componentMat=Material(new Color(.15f,.65f,.85f));
             shellMesh=NewMesh("Node skinned body",paint,out shellRenderer);
-            shellRenderer.sharedMaterials=new[]{paint,creased};
-            foreach(var p in car.panels) { panelMeshes.Add(NewMesh(p.name,paint,out MeshRenderer r));r.sharedMaterials=new[]{paint,creased}; panelRenderers.Add(r); }
+            var undercoat=Material(new Color(.075f,.08f,.075f),.15f,.12f);
+            shellRenderer.sharedMaterials=new[]{paint,creased,undercoat};
+            foreach(var p in car.panels) { panelMeshes.Add(NewMesh(p.name,paint,out MeshRenderer r));r.sharedMaterials=new[]{paint,creased,undercoat}; panelRenderers.Add(r); }
             var lineTemplate=Resources.Load<Material>("TOTALLED/DebugLines");
             var lineMaterial=lineTemplate!=null?new Material(lineTemplate):new Material(Shader.Find("Hidden/Internal-Colored"));
             lineMaterial.SetInt("_SrcBlend",(int)BlendMode.SrcAlpha);lineMaterial.SetInt("_DstBlend",(int)BlendMode.OneMinusSrcAlpha);
@@ -54,14 +57,15 @@ namespace Totalled
                 tire.GetComponent<MeshFilter>().sharedMesh=SedanWheelMesh.Tire();
                 tire.GetComponent<MeshRenderer>().sharedMaterials=new[]{rubber,Material(new Color(.045f,.049f,.05f),0,.16f)};
                 var rim=Primitive(PrimitiveType.Cylinder,w.name+" rim",steel);rimObjects.Add(rim);
-                foreach(float side in new[]{-1.01f,1.01f})for(int spoke=0;spoke<6;spoke++)
+                rim.GetComponent<MeshFilter>().sharedMesh=SedanWheelMesh.Rim();
+                foreach(float side in new[]{-.69f,.69f})for(int spoke=0;spoke<6;spoke++)
                 {
                     var slot=Primitive(PrimitiveType.Cube,"Wheel ventilation slot",rubber);slot.SetParent(rim,false);
                     float angle=spoke*Mathf.PI/3;
-                    slot.localPosition=new Vector3(Mathf.Sin(angle)*.32f,side,Mathf.Cos(angle)*.32f);
-                    slot.localRotation=Quaternion.Euler(0,spoke*60,0);slot.localScale=new Vector3(.12f,.025f,.19f);
+                    slot.localPosition=new Vector3(Mathf.Sin(angle)*.26f,side,Mathf.Cos(angle)*.26f);
+                    slot.localRotation=Quaternion.Euler(0,spoke*60,0);slot.localScale=new Vector3(.12f,.025f,.10f);
                 }
-                foreach(float side in new[]{-1.035f,1.035f})for(int bolt=0;bolt<5;bolt++)
+                foreach(float side in new[]{-.72f,.72f})for(int bolt=0;bolt<5;bolt++)
                 {
                     var lug=Primitive(PrimitiveType.Cylinder,"Wheel lug",steel);lug.SetParent(rim,false);
                     float angle=bolt*Mathf.PI*2/5;lug.localPosition=new Vector3(Mathf.Sin(angle)*.16f,side,Mathf.Cos(angle)*.16f);lug.localScale=new Vector3(.055f,.04f,.055f);
@@ -69,9 +73,9 @@ namespace Totalled
             }
             foreach(var n in car.structure.nodes) nodeObjects.Add(Primitive(PrimitiveType.Sphere,"Mass node",nodeMat));
             foreach(var p in car.parts) componentObjects.Add(Primitive(PrimitiveType.Cube,p.name,componentMat));
-            for(int i=0;i<4;i++) pillars.Add(Primitive(PrimitiveType.Cylinder,"Cabin pillar",steel));
-            trim=new SedanTrim(car,root.transform);interior=new SedanInterior(car,root.transform);
+            trim=new SedanTrim(car,root.transform,paint);interior=new SedanInterior(car,root.transform);
             Refresh();
+            if(Application.isPlaying)root.AddComponent<VehicleFeedback>().Initialize(car);
         }
         Mesh NewMesh(string name, Material mat, out MeshRenderer renderer)
         {
@@ -87,6 +91,7 @@ namespace Totalled
         }
         void Faces(Mesh mesh,IEnumerable<int[]> faces)
         {
+            insideFaces.Clear();
             var vertices=new List<Vector3>();var uv=new List<Vector2>();var intact=new List<int>();var damaged=new List<int>();
             foreach(var q in faces)
             {
@@ -104,16 +109,22 @@ namespace Totalled
                 float strain=0;foreach(int n in q)strain+=nodePlastic[n];
                 var triangles=strain/q.Length>.02f?damaged:intact;
                 var n0=car.structure.nodes[q[0]];var n1=car.structure.nodes[q[1]];var n2=car.structure.nodes[q[2]];var n3=car.structure.nodes[q[3]];
+                Vector3 originalNormal=Vector3.Cross(n1.original-n0.original,n3.original-n0.original);
+                reverseFace=Vector3.Dot(originalNormal,(n0.original+n1.original+n2.original+n3.original)*.25f-(car.structure.nodes[19].original+Vector3.up*.22f))<0;
                 Vector3 p0=SedanShape.Position(car,q[0]),p1=SedanShape.Position(car,q[1]),p2=SedanShape.Position(car,q[2]),p3=SedanShape.Position(car,q[3]);
                 bool flank=q[0]<42&&q[1]<42&&q[2]<42&&q[3]<42&&Mathf.Abs(n0.original.x)>.8f&&Mathf.Abs(n0.original.x-n2.original.x)<.01f&&n1.original.y>n0.original.y;
                 if(flank)
                 {
+                    float localZ=(n0.original.z+n3.original.z)*.5f-(car.structure.nodes[19].original.z);
+                    // Door openings reveal the actual cabin when a door comes off.
+                    if(Mathf.Abs(localZ)<.79f)continue;
                     // Visual wheel openings interpolate the existing deformable skin.
                     // Collision graph and handling geometry are unchanged.
                     for(int segment=0;segment<8;segment++)
                     {
                         float u=segment/8f,v=(segment+1)/8f;
-                        float lo=Arch(Mathf.Lerp(n0.original.z,n3.original.z,u)),hi=Arch(Mathf.Lerp(n0.original.z,n3.original.z,v));
+                        float originZ=car.structure.nodes[19].original.z;
+                        float lo=Arch(Mathf.Lerp(n0.original.z,n3.original.z,u)-originZ),hi=Arch(Mathf.Lerp(n0.original.z,n3.original.z,v)-originZ);
                         var bottom0=Vector3.Lerp(p0,p3,u);var bottom1=Vector3.Lerp(p0,p3,v);
                         var top0=Vector3.Lerp(p1,p2,u);var top1=Vector3.Lerp(p1,p2,v);
                                                 for(int band=0;band<3;band++)
@@ -126,9 +137,30 @@ namespace Totalled
                         }
                     }
                 }
-                else Emit(vertices,uv,triangles,p0,p1,p2,p3,new[]{SurfaceUV(n0.original,n0.original,n2.original),SurfaceUV(n1.original,n0.original,n2.original),SurfaceUV(n2.original,n0.original,n2.original),SurfaceUV(n3.original,n0.original,n2.original)});
+                else
+                {
+                    bool top=Mathf.Abs(n0.original.y-n2.original.y)<.01f&&n0.original.y>car.structure.nodes[19].original.y+.4f;
+                    int segments=top?4:1;
+                    Vector2 t0=SurfaceUV(n0.original,n0.original,n2.original),t1=SurfaceUV(n1.original,n0.original,n2.original),t2=SurfaceUV(n2.original,n0.original,n2.original),t3=SurfaceUV(n3.original,n0.original,n2.original);
+                    Vector3 normal=Vector3.Cross(p1-p0,p3-p0).normalized;if(Vector3.Dot(normal,car.Up)<0)normal=-normal;
+                    for(int y=0;y<segments;y++)for(int x=0;x<segments;x++)
+                    {
+                        Vector3[] points=new Vector3[4];Vector2[] coords=new Vector2[4];
+                        float[] us={x/(float)segments,(x+1f)/segments,(x+1f)/segments,x/(float)segments};
+                        float[] vs={y/(float)segments,y/(float)segments,(y+1f)/segments,(y+1f)/segments};
+                        for(int k=0;k<4;k++)
+                        {
+                            float u=us[k],v=vs[k];Vector3 rest=Vector3.Lerp(Vector3.Lerp(n0.original,n1.original,u),Vector3.Lerp(n3.original,n2.original,u),v);
+                            float localX=rest.x-car.structure.nodes[19].original.x;
+                            float crown=top?.045f*Mathf.Clamp01(1-localX*localX/(.94f*.94f)):0;
+                            points[k]=Vector3.Lerp(Vector3.Lerp(p0,p1,u),Vector3.Lerp(p3,p2,u),v)+normal*crown;
+                            coords[k]=Vector2.Lerp(Vector2.Lerp(t0,t1,u),Vector2.Lerp(t3,t2,u),v);
+                        }
+                        Emit(vertices,uv,triangles,points[0],points[1],points[2],points[3],coords);
+                    }
+                }
             }
-            mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.subMeshCount=2;mesh.SetTriangles(intact,0);mesh.SetTriangles(damaged,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.subMeshCount=3;mesh.SetTriangles(intact,0);mesh.SetTriangles(damaged,1);mesh.SetTriangles(insideFaces,2);mesh.RecalculateNormals();mesh.RecalculateBounds();
         }
         static Vector3 Side(Vector3 bottom,Vector3 top,Vector3 right,float t)
         {return Vector3.Lerp(bottom,top,t)+right*(Mathf.Sin(t*Mathf.PI)*.065f-.025f*(1-t));}
@@ -141,11 +173,12 @@ namespace Totalled
         }
         static float Arch(float z)
         {float d=Mathf.Min(Mathf.Abs(z-1.6f),Mathf.Abs(z+1.6f));return d>=.46f?0:Mathf.Clamp01((.40f+Mathf.Sqrt(.46f*.46f-d*d)-.58f)/.46f);}
-        static void Emit(List<Vector3> vertices,List<Vector2> uv,List<int> triangles,Vector3 a,Vector3 b,Vector3 c,Vector3 d,Vector2[] coords)
+        void Emit(List<Vector3> vertices,List<Vector2> uv,List<int> triangles,Vector3 a,Vector3 b,Vector3 c,Vector3 d,Vector2[] coords)
         {
             int v=vertices.Count;vertices.AddRange(new[]{a,b,c,d,a,b,c,d});
             uv.AddRange(coords);uv.AddRange(coords);
-            triangles.AddRange(new[]{v,v+1,v+2,v,v+2,v+3,v+6,v+5,v+4,v+7,v+6,v+4});
+            triangles.AddRange(reverseFace?new[]{v+2,v+1,v,v+3,v+2,v}:new[]{v,v+1,v+2,v,v+2,v+3});
+            insideFaces.AddRange(reverseFace?new[]{v+4,v+5,v+6,v+4,v+6,v+7}:new[]{v+6,v+5,v+4,v+7,v+6,v+4});
         }
         public void Refresh()
         {
@@ -174,7 +207,7 @@ namespace Totalled
                 componentObjects[i].localScale=new Vector3(.45f,.25f,.35f);componentObjects[i].gameObject.SetActive(componentsVisible);
             }
             int[] anchors={SacrificialSedan.Index(0,1,2),SacrificialSedan.Index(2,1,2),SacrificialSedan.Index(2,1,4),SacrificialSedan.Index(0,1,4)};
-            for(int i=0;i<4;i++)
+            for(int i=0;i<pillars.Count;i++)
             {
                 Vector3 a=SedanShape.Position(car,42+i),b=SedanShape.Position(car,anchors[i]);
                 pillars[i].position=(a+b)*.5f;pillars[i].rotation=Quaternion.FromToRotation(Vector3.up,a-b);pillars[i].localScale=new Vector3(.065f,(a-b).magnitude*.5f,.065f);pillars[i].gameObject.SetActive(bodyVisible);

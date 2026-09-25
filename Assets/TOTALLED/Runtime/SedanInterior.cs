@@ -20,6 +20,25 @@ namespace Totalled
             var iron=CrashLabArt.Surface(new Color(.22f,.23f,.21f),0,2);
             var enginePaint=SedanView.Material(new Color(.28f,.35f,.29f),.2f,.18f);
             var alloy=SedanView.Material(new Color(.49f,.48f,.42f),.5f,.25f);
+            // Rounded inner wheel tubs and rolled lips give the fenders depth.
+            foreach(float side in new[]{-1f,1f})foreach(float axleZ in new[]{-1.6f,1.6f})
+            {
+                for(int segment=0;segment<16;segment++)
+                {
+                    float a=segment*Mathf.PI/16,b=(segment+1)*Mathf.PI/16;
+                    Vector3 p=new Vector3(side*.945f,.40f+Mathf.Sin(a)*.47f,axleZ+Mathf.Cos(a)*.47f);
+                    Vector3 q=new Vector3(side*.945f,.40f+Mathf.Sin(b)*.47f,axleZ+Mathf.Cos(b)*.47f);
+                    Box("Rolled wheel arch",(p+q)*.5f,new Vector3(.035f,.035f,Vector3.Distance(p,q)+.009f),metal,Quaternion.LookRotation(q-p,Vector3.Cross(q-p,Vector3.right)));
+                    p.x=side*.82f;q.x=p.x;
+                    Box("Inner wheel tub",(p+q)*.5f,new Vector3(.19f,.035f,Vector3.Distance(p,q)+.009f),dash,Quaternion.LookRotation(q-p,Vector3.Cross(q-p,Vector3.right)));
+                }
+                Box("Lower sill",new Vector3(side*.93f,.595f,0),new Vector3(.075f,.09f,2.22f),dash);
+            }
+            foreach(float end in new[]{-1f,1f})
+            {
+                Box("Bumper impact rubber",new Vector3(0,.665f,end*2.44f),new Vector3(1.85f,.13f,.12f),dash);
+                Box("Bumper upper chrome",new Vector3(0,.744f,end*2.445f),new Vector3(1.86f,.027f,.14f),metal);
+            }
             Box("Engine bay floor",new Vector3(0,.635f,1.53f),new Vector3(1.35f,.035f,1.55f),dash);
             Box("Engine block",new Vector3(0,.77f,1.46f),new Vector3(.61f,.31f,.70f),enginePaint);
             foreach(float side in new[]{-1f,1f})
@@ -40,9 +59,9 @@ namespace Totalled
             Box("Firewall",new Vector3(0,.82f,.91f),new Vector3(1.35f,.31f,.04f),iron);
             foreach(float side in new[]{-1f,1f})
             {
-                Box("Mirror stalk",new Vector3(side*.91f,1.09f,.60f),new Vector3(.17f,.045f,.045f),dash);
-                Box("Mirror housing",new Vector3(side*1.01f,1.13f,.57f),new Vector3(.13f,.14f,.22f),dash);
-                Box("Mirror glass",new Vector3(side*1.01f,1.13f,.452f),new Vector3(.10f,.10f,.015f),metal);
+                Box("Mirror stalk",new Vector3(side*1.0f,1.09f,.60f),new Vector3(.17f,.045f,.045f),dash);
+                Box("Mirror housing",new Vector3(side*1.10f,1.13f,.57f),new Vector3(.13f,.14f,.22f),dash);
+                Box("Mirror glass",new Vector3(side*1.10f,1.13f,.452f),new Vector3(.10f,.10f,.015f),metal);
             }
             foreach(float x in new[]{-.40f,.40f})
             {

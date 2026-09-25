@@ -6,11 +6,12 @@ namespace Totalled
     // Trim is bound to local node quads, so it follows the same deformed body.
     public sealed class SedanTrim
     {
-        sealed class Patch {public int[] nodes;public Vector4 rect;public Mesh mesh;public GameObject go;public bool torn;public float maxSpan,depth;}
+        sealed class Patch {public int[] nodes;public Vector4 rect;public Mesh mesh;public GameObject go;public bool torn,glass;public float maxSpan,depth;public float[] edges;}
         readonly SacrificialSedan car;
         readonly List<Patch> patches=new List<Patch>();
         readonly Transform root;
-        public SedanTrim(SacrificialSedan car,Transform parent)
+        readonly Material brakeLens;
+        public SedanTrim(SacrificialSedan car,Transform parent,Material paint)
         {
             this.car=car;root=parent;
             var chrome=SedanView.Material(new Color(.56f,.58f,.56f),.6f,.4f);
@@ -23,6 +24,7 @@ namespace Totalled
             lens.Apply();head.mainTexture=lens;
             var amber=SedanView.Material(new Color(.67f,.29f,.035f),.1f,.3f);
             var tail=SedanView.Material(new Color(.50f,.065f,.025f),.1f,.35f);
+            brakeLens=tail;
             int[] front={I(0,0,6),I(2,0,6),I(2,1,6),I(0,1,6)};
             int[] back={I(2,0,0),I(0,0,0),I(0,1,0),I(2,1,0)};
             foreach(var end in new[]{front,back})
@@ -36,19 +38,32 @@ namespace Totalled
                 Add(end,new Vector4(.04f,.43f,.085f,.90f),end==front?amber:head,"Lamp indicator");
                 Add(end,new Vector4(.915f,.43f,.96f,.90f),end==front?amber:head,"Lamp indicator");
             }
-            Add(new[]{I(0,1,4),I(2,1,4),44,45},new Vector4(.035f,.08f,.965f,.91f),glass,"Windshield");
-            Add(new[]{I(2,1,2),I(0,1,2),42,43},new Vector4(.035f,.08f,.965f,.91f),glass,"Rear glass");
+            Frame(new[]{I(0,1,4),I(2,1,4),44,45},paint,black,glass,false);
+            Frame(new[]{I(2,1,2),I(0,1,2),42,43},paint,black,glass,false);
             for(int side=0;side<2;side++)
             {
                 int x=side==0?0:2;
                 int[] window={I(x,1,2),I(x,1,4),side==0?45:44,side==0?42:43};
-                Add(window,new Vector4(.03f,.05f,.97f,.95f),glass,"Side windows");
-                Add(window,new Vector4(.46f,.01f,.50f,1),black,"Window divider");
+                Frame(window,paint,black,glass,true);
+                Add(window,new Vector4(.43f,.01f,.49f,1),paint,"Window divider");
                 var door=car.panels[side+2];int[] q={door.nodes[0],door.nodes[6],door.nodes[8],door.nodes[2]};
                 Add(q,new Vector4(.12f,.73f,.30f,.80f),chrome,"Door handle");
                 Add(q,new Vector4(.02f,.12f,.98f,.18f),black,"Door rubbing strip");
                 for(int z=2;z<4;z++)Add(new[]{I(x,0,z),I(x,0,z+1),I(x,1,z+1),I(x,1,z)},new Vector4(0,.08f,1,.18f),black,"Sill trim");
             }
+        }
+        void Frame(int[] q,Material paint,Material gasket,Material glass,bool side)
+        {
+            float left=side?.17f:.055f,right=side?.08f:.055f;
+            Add(q,new Vector4(0,0,1,.085f),paint,"Painted window surround");
+            Add(q,new Vector4(0,.93f,1,1.035f),paint,"Painted window surround");
+            Add(q,new Vector4(0,0,left,1),paint,"Painted window surround");
+            Add(q,new Vector4(1-right,0,1,1),paint,"Painted window surround");
+            Add(q,new Vector4(left,.065f,1-right,.095f),gasket,"Glass seal");
+            Add(q,new Vector4(left,.915f,1-right,.94f),gasket,"Glass seal");
+            Add(q,new Vector4(left-.01f,.08f,left+.018f,.93f),gasket,"Glass seal");
+            Add(q,new Vector4(1-right-.018f,.08f,1-right+.01f,.93f),gasket,"Glass seal");
+            Add(q,new Vector4(left+.012f,.09f,1-right-.012f,.925f),glass,"Breakable glass");
         }
         static Material Plate()
         {
@@ -63,14 +78,23 @@ namespace Totalled
             var go=new GameObject(name);go.layer=2;go.transform.SetParent(root,false);
             var mesh=new Mesh();mesh.MarkDynamic();go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=mat;
             float span=0;for(int i=0;i<4;i++)span+=Vector3.Distance(car.structure.nodes[nodes[i]].position,car.structure.nodes[nodes[(i+1)%4]].position);
-            patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider"||name=="Lamp indicator")?.022f:.014f});
+            bool isGlass=name=="Breakable glass";
+            if(isGlass)go.GetComponent<MeshRenderer>().shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+            float[] edges=new float[4];for(int i=0;i<4;i++)edges[i]=Vector3.Distance(SedanShape.Position(car,nodes[i]),SedanShape.Position(car,nodes[(i+1)%4]));
+            patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,glass=isGlass,edges=edges,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider"||name=="Lamp indicator"||name=="Glass seal")?.027f:.014f});
         }
         public void Refresh(bool visible)
         {
+            brakeLens.color=car.brake>.05f||car.throttle*car.Speed<-.8f?new Color(1,.13f,.035f):new Color(.38f,.025f,.015f);
             foreach(var p in patches)
             {
                 var a=SedanShape.Position(car,p.nodes[0]);var b=SedanShape.Position(car,p.nodes[1]);var c=SedanShape.Position(car,p.nodes[2]);var d=SedanShape.Position(car,p.nodes[3]);
                 if(Vector3.Distance(a,b)+Vector3.Distance(b,c)+Vector3.Distance(c,d)+Vector3.Distance(d,a)>p.maxSpan)p.torn=true;
+                if(p.glass)
+                {
+                    Vector3[] corners={a,b,c,d};
+                    for(int edge=0;edge<4;edge++)if(Mathf.Abs(Vector3.Distance(corners[edge],corners[(edge+1)%4])/p.edges[edge]-1)>.12f)p.torn=true;
+                }
                 p.go.SetActive(visible&&!p.torn);if(!visible||p.torn)continue;
                 Vector3 normal=Vector3.Cross(b-a,d-a).normalized;
                 if(Vector3.Dot(normal,(a+b+c+d)*.25f-car.Center)<0)normal=-normal;

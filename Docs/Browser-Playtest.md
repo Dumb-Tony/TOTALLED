@@ -5,7 +5,7 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.6.0`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.7.0`.
 
 ## Live checks — 0.2 (historical)
 
@@ -46,3 +46,7 @@ All 45 numerical checks pass. Windows startup/crash smoke verification passes wi
 
 Live Pages 0.6 verification: updated silhouette and transparent cabin render correctly; a frontal wall impact yielded 127 beams, broke 12 connections and retained 5.625 m of cumulative plastic travel in the observed run. No browser console errors were recorded. Compact HUD shows 0.6; the expanded telemetry header retains the older 0.5 label (cosmetic).
 
+
+## Build checks — 0.7
+
+All 47 simulation checks pass, including opposite-pedal braking and subsequent reverse propulsion. Handbrake slip in the matched turn is 50.4 degrees versus 0.7 degrees for the foot brake. Packaged Windows verification passes with three captures, two active engine sources, tire scrub audio active during a slide, 688 skid vertices and no runtime errors. Audio-source verification is not subjective listening validation. Intact, wreck and slide captures were inspected. See Playtest-0.7.md for changes and limitations.

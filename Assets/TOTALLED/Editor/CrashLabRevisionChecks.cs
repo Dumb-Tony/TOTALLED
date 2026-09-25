@@ -69,6 +69,12 @@ public static class CrashLabRevisionChecks
             bool finite=true;foreach(var m in results.maneuvers)finite&=m.finite;
             check(finite,"Brake and handbrake maneuvers stay finite.");
 
+            var reverse=new SacrificialSedan(new Vector3(-6,0,-12),probe);Step(reverse,150);
+            reverse.Launch(Vector3.forward*8);reverse.throttle=-1;Step(reverse,25);
+            check(reverse.Speed>0&&reverse.Speed<7,"Opposite pedal slows forward travel before the car changes direction.");
+            Step(reverse,85);
+            check(reverse.Speed<-1&&reverse.structure.Finite(),"Holding reverse after slowing engages backward propulsion without instability.");
+
             var impact=new SacrificialSedan(Vector3.zero,probe);Step(impact,150);
             float pristineNose=Nose(impact);impact.throttle=1;Step(impact,350);impact.throttle=0;
             results.drivenImpactPlasticTravel=impact.structure.PlasticTotal;

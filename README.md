@@ -15,7 +15,7 @@ Open the project in Unity, open `Assets/TOTALLED/Scenes/CrashLab.unity`, and pre
 | 1 / 2 / 3 / 4 | Launch same damaged specimen into front / rear / side wall / offset pole |
 | 5 / 6 | Hit the other car / slide your side into it |
 | E | Switch which car you drive |
-| H | Show or hide detailed telemetry |
+| H / M | Detailed telemetry / mute audio |
 | [ / ] | Decrease / increase laboratory launch speed |
 | R | Upright and relocate connected structure; preserve all damage |
 | N | Spawn a new specimen; keep old wreck and debris |
@@ -36,7 +36,7 @@ From PowerShell (close this project's editor first):
 
 The verifier exits Unity when finished. Inspect `Artifacts/verification.json` and the nine PNG captures. `-nographics` allows numerical checks but intentionally skips captures. Use the **TOTALLED** editor menu for an interactive run; it replaces the open scene, so save your edits first.
 
-Launch the Windows player with `-crashlab-smoke` for a ten-second unattended rendered check. It writes `Artifacts/runtime-smoke.json` and two screenshots, then exits. This option is only for validation; ordinary launches are fully interactive.
+Launch the Windows player with `-crashlab-smoke` for a twelve-second unattended rendered, audio-source and skid-mark check. It writes `Artifacts/runtime-smoke.json` and three screenshots, then exits. This option is only for validation; ordinary launches are fully interactive.
 
 ## Structure
 
@@ -56,6 +56,3 @@ The public source repository is `Dumb-Tony/TOTALLED`. The `gh-pages` branch host
 Use **TOTALLED → Build browser playtest**, or run `CrashLabPublish.BuildWeb` in batch mode with `-buildTarget WebGL`. The output is `Builds/WebGL`; the build step installs the page from `Tools/Playtest/index.html`. Gzip with Unity's decompression fallback works without custom server headers. Publish the contents of that directory to the root of `gh-pages`, keeping `.nojekyll`.
 
 The browser build is the actual Unity simulation, not a rewritten browser approximation. Use a desktop browser with a keyboard and mouse. Mobile controls and multiplayer are not implemented. When reporting bugs, include your browser, impact sequence, and whether you used recovery or spawned additional specimens.
-
-
-

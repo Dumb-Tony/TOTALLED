@@ -48,14 +48,14 @@ namespace Totalled
         public static void Dress(Camera camera)
         {
             QualitySettings.shadows=ShadowQuality.All;QualitySettings.shadowResolution=ShadowResolution.High;
-            QualitySettings.shadowDistance=85;QualitySettings.shadowCascades=2;QualitySettings.antiAliasing=2;
+            QualitySettings.shadowDistance=55;QualitySettings.shadowCascades=2;QualitySettings.antiAliasing=2;
             RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=new Color(.50f,.58f,.66f);
             RenderSettings.ambientEquatorColor=new Color(.38f,.36f,.34f);RenderSettings.ambientGroundColor=new Color(.20f,.18f,.16f);
             RenderSettings.fogMode=FogMode.Linear;RenderSettings.fogStartDistance=65;RenderSettings.fogEndDistance=180;
             RenderSettings.fogColor=new Color(.65f,.62f,.57f);camera.backgroundColor=RenderSettings.fogColor;
             RenderSettings.skybox=Resources.Load<Material>("TOTALLED/YardSky");camera.clearFlags=CameraClearFlags.Skybox;
             foreach(var light in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
-            {light.color=new Color(1,.82f,.62f);light.intensity=1.1f;light.shadowStrength=.85f;light.shadowBias=.025f;light.shadowNormalBias=.15f;light.transform.rotation=Quaternion.Euler(32,-32,0);}
+            {light.color=new Color(1,.82f,.62f);light.intensity=1.1f;light.shadowStrength=.85f;light.shadowBias=.08f;light.shadowNormalBias=.15f;light.transform.rotation=Quaternion.Euler(32,-32,0);}
             var asphalt=Surface(new Color(.23f,.24f,.25f),0,24);
             var concrete=Surface(new Color(.56f,.54f,.49f),1,3);
             var yellow=Surface(new Color(.8f,.55f,.16f),2);
@@ -124,5 +124,3 @@ namespace Totalled
         }
     }
 }
-
-

@@ -44,7 +44,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.6.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.7.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;

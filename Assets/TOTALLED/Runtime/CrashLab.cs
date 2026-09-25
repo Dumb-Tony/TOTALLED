@@ -18,6 +18,7 @@ namespace Totalled
         int debugMode;
         float yaw=25, pitch=24, distance=9;
         public float LaunchSpeed=18;
+        public bool automatedInput;
         Vector3 cameraTarget;
         GUIStyle titleStyle, textStyle, smallStyle;
         public void Initialize()
@@ -64,7 +65,7 @@ namespace Totalled
         void Start()
         {
             Initialize();
-            if(System.Array.IndexOf(System.Environment.GetCommandLineArgs(),"-crashlab-smoke")>=0)gameObject.AddComponent<CrashLabSmoke>();
+            if(System.Array.IndexOf(System.Environment.GetCommandLineArgs(),"-crashlab-smoke")>=0){automatedInput=true;gameObject.AddComponent<CrashLabSmoke>();}
         }
         public void NewSpecimen()
         {
@@ -90,6 +91,7 @@ namespace Totalled
             if(Input.GetKeyDown(KeyCode.B))body=!body;
             if(Input.GetKeyDown(KeyCode.V))debug=!debug;
             if(Input.GetKeyDown(KeyCode.C))components=!components;
+            if(Input.GetKeyDown(KeyCode.M))AudioListener.pause=!AudioListener.pause;
             if(Input.GetKeyDown(KeyCode.H))telemetry=!telemetry;
             if(Input.GetKeyDown(KeyCode.E))
             {
@@ -111,7 +113,7 @@ namespace Totalled
             orbit=Input.GetMouseButton(1);
             if(orbit) { yaw+=Input.GetAxis("Mouse X")*3;pitch=Mathf.Clamp(pitch-Input.GetAxis("Mouse Y")*3,5,80); }
             distance=Mathf.Clamp(distance-Input.mouseScrollDelta.y,4,22);
-            Active.throttle=Input.GetAxisRaw("Vertical");Active.steering=Input.GetAxisRaw("Horizontal");Active.handbrake=Input.GetKey(KeyCode.Space);Active.brake=Input.GetKey(KeyCode.LeftShift)||Input.GetKey(KeyCode.LeftControl)?1:0;
+            if(!automatedInput){Active.throttle=Input.GetAxisRaw("Vertical");Active.steering=Input.GetAxisRaw("Horizontal");Active.handbrake=Input.GetKey(KeyCode.Space);Active.brake=Input.GetKey(KeyCode.LeftShift)||Input.GetKey(KeyCode.LeftControl)?1:0;}
             foreach(var view in views) {view.bodyVisible=body;view.debugVisible=debug;view.debugMode=debugMode;view.componentsVisible=components;view.Refresh();}
             MoveCamera(false);
         }
@@ -154,16 +156,16 @@ namespace Totalled
                 float width=Screen.width/scale,height=Screen.height/scale;
                 GUI.color=new Color(.06f,.09f,.11f,.94f);GUI.DrawTexture(new Rect(18,18,265,116),Texture2D.whiteTexture);GUI.color=Color.white;
                 GUI.Label(new Rect(32,26,240,32),"TOTALLED",titleStyle);
-                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.6",smallStyle);
+                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.7",smallStyle);
                 GUI.Label(new Rect(32,88,240,28),$"{Mathf.Abs(Active.Speed)*3.6f:000} KM/H   {(paused?"PAUSED":Active.handbrake?"HANDBRAKE":Active.brake>0?"BRAKING":"SACRIFICIAL SEDAN")}",smallStyle);
                 GUI.color=new Color(.06f,.09f,.11f,.92f);GUI.DrawTexture(new Rect(18,height-90,Mathf.Min(690,width-36),72),Texture2D.whiteTexture);GUI.color=Color.white;
-                GUI.Label(new Rect(30,height-86,width-55,24),"WASD drive   SPACE handbrake   SHIFT brake   R recover   H telemetry",smallStyle);
+                GUI.Label(new Rect(30,height-86,width-55,24),"WASD drive   SPACE handbrake   SHIFT brake   R recover   H telemetry   M mute",smallStyle);
                 GUI.Label(new Rect(30,height-63,width-55,24),"5 hit second car   6 side impact   1–4 lab impacts   N new car",smallStyle);
                 GUI.Label(new Rect(30,height-40,width-55,24),"E switch cars   •   Right mouse: orbit / wheel: zoom   •   Both cars deform",smallStyle);
                 return;
             }
             GUI.Box(new Rect(18,18,360,480),GUIContent.none);
-            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.5",smallStyle);GUILayout.Space(12);
+            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.7",smallStyle);GUILayout.Space(12);
             GUILayout.Label($"{Mathf.Abs(Active.Speed)*3.6f:0} km/h    {(paused?"PAUSED":slow?"SLOW MOTION":"LIVE")}",textStyle);
             GUILayout.Label(Active.handbrake?"HANDBRAKE / REAR TIRES LOCKING":Active.brake>0?"BRAKE / FOUR-WHEEL STOP":"ROLLING / FULL TIRE GRIP",smallStyle);
             GUILayout.Label($"{Active.structure.nodes.Count} nodes  /  {Active.structure.beams.Count} beams",textStyle);

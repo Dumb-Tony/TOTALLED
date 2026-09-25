@@ -5,6 +5,18 @@ namespace Totalled
 {
     public static class SedanWheelMesh
     {
+        public static Mesh Rim()
+        {
+            const int steps=32;
+            float[] heights={-.66f,-.66f,-.82f,-.88f,-.88f,.88f,.88f,.82f,.66f,.66f};
+            float[] radii={0,.32f,.40f,.46f,.50f,.50f,.46f,.40f,.32f,0};
+            var vertices=new List<Vector3>();var triangles=new List<int>();
+            for(int ring=0;ring<heights.Length;ring++)for(int segment=0;segment<=steps;segment++)
+            {float angle=segment*Mathf.PI*2/steps;vertices.Add(new Vector3(Mathf.Sin(angle)*radii[ring],heights[ring],Mathf.Cos(angle)*radii[ring]));}
+            for(int ring=0;ring<heights.Length-1;ring++)for(int segment=0;segment<steps;segment++)
+            {int a=ring*(steps+1)+segment,b=a+1,c=b+steps+1,d=a+steps+1;triangles.AddRange(new[]{a,b,c,a,c,d});}
+            var mesh=new Mesh{name="Recessed steel rim and rolled bead"};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
+        }
         public static Mesh Tire()
         {
             const int steps=32;

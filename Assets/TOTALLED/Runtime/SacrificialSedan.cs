@@ -10,7 +10,7 @@ namespace Totalled
         public int hub, front, rear, upper;
         public readonly List<int> links = new List<int>();
         public bool steering, driven, punctured;
-        public float radius = .36f, rimBend, compression, spin, rearLock;
+        public float radius = .36f, rimBend, compression, spin, rearLock, lateralSlip;
         public Vector3 forward, up;
         public int LiveLinks(SoftStructure s) { int c = 0; foreach (int b in links) if (!s.beams[b].broken) c++; return c; }
     }
@@ -40,6 +40,8 @@ namespace Totalled
         public int chassisCount;
         public float throttle, steering, brake, temperature = 80, fuel = 1;
         public float DriveForceLastStep, DistanceTravelled;
+        public float SteeringAngle {get;private set;}
+        float pedal;
         public bool handbrake;
         public Vector3 Center { get { Vector3 p = Vector3.zero; for (int i = 12; i < 30; i++) p += structure.nodes[i].position; return p / 18; } }
         public Vector3 Forward => ((structure.nodes[Index(1,0,4)].position - structure.nodes[Index(1,0,2)].position)).normalized;
@@ -159,6 +161,9 @@ namespace Totalled
         }
         public void PrepareTick(float dt)
         {
+            float lockAngle=Mathf.Lerp(29,18,Mathf.InverseLerp(5,22,Mathf.Abs(Speed)));
+            SteeringAngle=Mathf.MoveTowards(SteeringAngle,Mathf.Clamp(steering,-1,1)*lockAngle,dt*(Mathf.Abs(steering)<.01f?100:75));
+            pedal=Mathf.MoveTowards(pedal,Mathf.Clamp(throttle,-1,1),dt*4);
             foreach(var p in parts)
             {
                 float strain=Mathf.Abs(Vector3.Distance(structure.nodes[p.a].position,structure.nodes[p.b].position)-p.span)/p.span;
@@ -178,7 +183,16 @@ namespace Totalled
                 Vector3 mountForward=(structure.nodes[w.front].position-structure.nodes[w.rear].position).normalized;
                 Vector3 mountUp=(structure.nodes[w.upper].position-(structure.nodes[w.front].position+structure.nodes[w.rear].position)*.5f).normalized;
                 w.up=mountUp;
-                w.forward=Quaternion.AngleAxis(w.steering?steering*29:0,mountUp)*mountForward;
+                // Inside front wheel follows a tighter radius; steering still follows
+                // the damaged mount vectors, rather than an artificial yaw force.
+                float angle=SteeringAngle;
+                if(w.steering&&Mathf.Abs(angle)>.1f)
+                {
+                    float turnRadius=3.2f/Mathf.Tan(Mathf.Abs(angle)*Mathf.Deg2Rad);
+                    bool inside=Vector3.Dot(hub.position-Center,Right)*angle>0;
+                    angle=Mathf.Sign(angle)*Mathf.Atan(3.2f/Mathf.Max(.5f,turnRadius+(inside?-1.01f:1.01f)))*Mathf.Rad2Deg;
+                }
+                w.forward=Quaternion.AngleAxis(w.steering?angle:0,mountUp)*mountForward;
                 int links=w.LiveLinks(structure);
                 w.radius=w.punctured?.255f:.36f;
                 hub.radius=w.radius;
@@ -187,6 +201,7 @@ namespace Totalled
                 w.rimBend=Mathf.Max(w.rimBend,Mathf.Max(0,Mathf.Abs(mountDist-.67f)-.2f));
                 if(w.rimBend>.23f) w.punctured=true;
                 w.compression=0;
+                w.lateralSlip=0;
                 w.rearLock=Mathf.MoveTowards(w.rearLock,handbrake&&!w.steering?1:0,dt*(handbrake?9:5));
                 if(links<2) continue; // A hanging wheel cannot transmit useful drive torque.
                 if(!Physics.Raycast(hub.position, -up, out RaycastHit hit,w.radius+.08f,1<<0,QueryTriggerInteraction.Ignore)) continue;
@@ -195,19 +210,23 @@ namespace Totalled
                 Vector3 f=Vector3.ProjectOnPlane(w.forward,hit.normal).normalized;
                 Vector3 lateral=Vector3.Cross(hit.normal,f).normalized;
                 float longitudinal=Vector3.Dot(hub.velocity,f), slip=Vector3.Dot(hub.velocity,lateral);
+                w.lateralSlip=slip;
                 float grip=w.punctured?1300:3200;
                 // A locked rear tire slides sideways. Service braking keeps cornering
                 // grip on all four tires; neither path injects artificial yaw torque.
                 float sideGrip=grip*Mathf.Lerp(1,.18f,w.rearLock);
                 float corneringStiffness=Mathf.Lerp(1900,300,w.rearLock);
                 float sideForce=Mathf.Clamp(-slip*corneringStiffness,-sideGrip,sideGrip);
-                float service=Mathf.Clamp01(brake);
-                float drive=w.driven?throttle*power*2900*(1-service)*(1-w.rearLock):0;
+                // Opposite pedal first slows a moving car, then engages reverse.
+                bool opposing=pedal*Speed<-.8f;
+                float service=Mathf.Max(Mathf.Clamp01(brake),opposing?Mathf.Abs(pedal):0);
+                float drive=w.driven&&!opposing?pedal*power*2900*(1-service)*(1-w.rearLock):0;
                 drive*=Mathf.Clamp01((32-Mathf.Abs(longitudinal))/8);
                 float brakeCapacity=Mathf.Max(service*grip*(w.steering?1.18f:.96f),w.rearLock*grip*.78f);
                 float stop=Mathf.Clamp(-longitudinal*2200,-brakeCapacity,brakeCapacity);
                 Vector3 force=f*(drive+stop-longitudinal*(w.punctured?130:35))+lateral*sideForce;
-                force=Vector3.ClampMagnitude(force,grip*1.3f);
+                // Acceleration, braking and cornering share one tire friction budget.
+                force=Vector3.ClampMagnitude(force,grip);
                 hub.force+=force;
                 DriveForceLastStep+=Mathf.Abs(drive)*dt;
                 w.spin+=longitudinal/w.radius*dt*(1-w.rearLock);
@@ -225,7 +244,3 @@ namespace Totalled
         { structure.Relocate(target,Quaternion.Inverse(Orientation),Center,Index(1,0,3)); }
     }
 }
-
-
-
-
