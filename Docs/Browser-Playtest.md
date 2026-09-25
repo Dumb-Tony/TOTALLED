@@ -50,3 +50,6 @@ Live Pages 0.6 verification: updated silhouette and transparent cabin render cor
 ## Build checks — 0.7
 
 All 47 simulation checks pass, including opposite-pedal braking and subsequent reverse propulsion. Handbrake slip in the matched turn is 50.4 degrees versus 0.7 degrees for the foot brake. Packaged Windows verification passes with three captures, two active engine sources, tire scrub audio active during a slide, 688 skid vertices and no runtime errors. Audio-source verification is not subjective listening validation. Intact, wreck and slide captures were inspected. See Playtest-0.7.md for changes and limitations.
+
+Live Pages verification: 0.7 starts and renders the updated cars without console errors. A 5-key collision moved the target and left the player with 107 yielded beams, 3 broken connections and 3.201 m accumulated plastic travel. Switching with E showed the struck car retained 59 yielded beams and 0.710 m plastic travel. The player's detached hood revealed the engine bay.
+
