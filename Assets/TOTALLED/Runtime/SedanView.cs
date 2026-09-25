@@ -93,18 +93,34 @@ namespace Totalled
                         {tornFaces.Add(q);break;}
                     }
                 if(tornFaces.Contains(q))continue;
-                int v=vertices.Count;
                 float strain=0;foreach(int n in q)strain+=nodePlastic[n];
                 var triangles=strain/q.Length>.02f?damaged:intact;
-                foreach(int n in q) vertices.Add(car.structure.nodes[n].position);
-                uv.AddRange(new[]{Vector2.zero,Vector2.up,Vector2.one,Vector2.right});
-                triangles.AddRange(new[]{v,v+1,v+2,v,v+2,v+3});
-                // Reverse faces need separate vertices so their normals do not cancel.
-                foreach(int n in q) vertices.Add(car.structure.nodes[n].position);
-                uv.AddRange(new[]{Vector2.zero,Vector2.up,Vector2.one,Vector2.right});
-                triangles.AddRange(new[]{v+6,v+5,v+4,v+7,v+6,v+4});
+                var n0=car.structure.nodes[q[0]];var n1=car.structure.nodes[q[1]];var n2=car.structure.nodes[q[2]];var n3=car.structure.nodes[q[3]];
+                bool flank=q[0]<42&&q[1]<42&&q[2]<42&&q[3]<42&&Mathf.Abs(n0.original.x)>.8f&&Mathf.Abs(n0.original.x-n2.original.x)<.01f&&n1.original.y>n0.original.y;
+                if(flank)
+                {
+                    // Visual wheel openings interpolate the existing deformable skin.
+                    // Collision graph and handling geometry are unchanged.
+                    for(int segment=0;segment<8;segment++)
+                    {
+                        float u=segment/8f,v=(segment+1)/8f;
+                        float lo=Arch(Mathf.Lerp(n0.original.z,n3.original.z,u)),hi=Arch(Mathf.Lerp(n0.original.z,n3.original.z,v));
+                        var bottom0=Vector3.Lerp(n0.position,n3.position,u);var bottom1=Vector3.Lerp(n0.position,n3.position,v);
+                        var top0=Vector3.Lerp(n1.position,n2.position,u);var top1=Vector3.Lerp(n1.position,n2.position,v);
+                        Emit(vertices,uv,triangles,Vector3.Lerp(bottom0,top0,lo),top0,top1,Vector3.Lerp(bottom1,top1,hi));
+                    }
+                }
+                else Emit(vertices,uv,triangles,n0.position,n1.position,n2.position,n3.position);
             }
             mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.subMeshCount=2;mesh.SetTriangles(intact,0);mesh.SetTriangles(damaged,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
+        }
+        static float Arch(float z)
+        {float d=Mathf.Min(Mathf.Abs(z-1.6f),Mathf.Abs(z+1.6f));return d>=.46f?0:Mathf.Clamp01((.40f+Mathf.Sqrt(.46f*.46f-d*d)-.58f)/.46f);}
+        static void Emit(List<Vector3> vertices,List<Vector2> uv,List<int> triangles,Vector3 a,Vector3 b,Vector3 c,Vector3 d)
+        {
+            int v=vertices.Count;vertices.AddRange(new[]{a,b,c,d,a,b,c,d});
+            uv.AddRange(new[]{Vector2.zero,Vector2.up,Vector2.one,Vector2.right,Vector2.zero,Vector2.up,Vector2.one,Vector2.right});
+            triangles.AddRange(new[]{v,v+1,v+2,v,v+2,v+3,v+6,v+5,v+4,v+7,v+6,v+4});
         }
         public void Refresh()
         {
@@ -119,7 +135,7 @@ namespace Totalled
             {
                 var w=car.wheels[i];var n=car.structure.nodes[w.hub];
                 Vector3 axle=Vector3.Cross(w.up.sqrMagnitude>.1f?w.up:car.Up,w.forward.sqrMagnitude>.1f?w.forward:car.Forward).normalized;
-                Quaternion rotation=Quaternion.FromToRotation(Vector3.up,axle);
+                Quaternion rotation=WheelRotation(axle,w.spin);
                 wheelObjects[i].SetPositionAndRotation(n.position,rotation);wheelObjects[i].localScale=new Vector3(w.radius*2,.13f,w.radius*2);
                 wheelObjects[i].gameObject.SetActive(!w.punctured);
                 rimObjects[i].SetPositionAndRotation(n.position,rotation*Quaternion.AngleAxis(Mathf.Sin(w.spin)*w.rimBend*25,Vector3.right));
@@ -152,6 +168,8 @@ namespace Totalled
                 Line(verts,colors,indices,sample.point,sample.point+Vector3.ClampMagnitude(sample.impulse*.002f,2),new Color(1,.2f,.7f,1-sample.age));
             debugMesh.Clear();debugMesh.SetVertices(verts);debugMesh.SetColors(colors);debugMesh.SetIndices(indices,MeshTopology.Lines,0);debugMesh.RecalculateBounds();
         }
+        public static Quaternion WheelRotation(Vector3 axle,float radians)
+        {return Quaternion.FromToRotation(Vector3.up,axle)*Quaternion.AngleAxis(-radians*Mathf.Rad2Deg,Vector3.up);}
         static void Line(List<Vector3> v,List<Color> c,List<int> t,Vector3 a,Vector3 b,Color color)
         { t.Add(v.Count);v.Add(a);c.Add(color);t.Add(v.Count);v.Add(b);c.Add(color); }
     }

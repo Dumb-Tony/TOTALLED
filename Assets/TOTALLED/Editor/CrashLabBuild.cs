@@ -36,7 +36,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.4.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.5.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;
@@ -74,6 +74,7 @@ public static class CrashLabBuild
         try
         {
             CrashLabRevisionChecks.Run(Check);
+            CrashLabWheelChecks.Run(Check);
             CrashLabTargetChecks.Run(lab,Check);
             Run(lab,250);var settled=Record(car,"settled");Capture(lab,"01-pristine");
             Check(car.structure.Finite(),"Stationary structure stays finite after five seconds.");
@@ -150,6 +151,8 @@ public static class CrashLabBuild
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Windows build failed: "+result.summary.result);
     }
 }
+
+
 
 
 

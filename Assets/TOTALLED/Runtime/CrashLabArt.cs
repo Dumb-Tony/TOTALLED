@@ -11,7 +11,7 @@ namespace Totalled
         {
             var m=SedanView.Material(tint,kind==2?.25f:0,kind==2?.25f:.08f);
             const int size=128;var tex=new Texture2D(size,size,TextureFormat.RGB24,true);
-            tex.name=new[]{"Asphalt aggregate","Weathered concrete","Oxidized enamel","Rubber tread"}[kind];
+            tex.name=new[]{"Asphalt aggregate","Weathered concrete","Oxidized enamel","Rubber tread","Aged brick"}[kind];
             var pixels=new Color[size*size];var random=new System.Random(730+kind);
             for(int y=0;y<size;y++)for(int x=0;x<size;x++)
             {
@@ -19,6 +19,7 @@ namespace Totalled
                 if(kind==0) {v=.65f+n*.35f;if((x+y*3)%61==0)v*=.5f;}
                 if(kind==1) {v=.78f+n*.22f;if(y%32==0)v*=.7f;}
                 if(kind==2) {v=.94f+n*.06f;if(Mathf.PerlinNoise(x*.045f,y*.045f)>.76f)v*=.76f;}
+                if(kind==4){v=.68f+n*.32f;if(y%16<2||(x+(y/16%2)*16)%32<2)v=.40f;}
                 if(kind==3)v=((x+y/4)%18<4)?.32f:.72f+n*.2f;
                 pixels[y*size+x]=new Color(v,v,v);
             }
@@ -30,6 +31,7 @@ namespace Totalled
             var g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=name;g.transform.position=pos;g.transform.localScale=size;
             if(rotation!=default)g.transform.rotation=rotation;
             g.GetComponent<Renderer>().sharedMaterial=mat;
+            if(name.Contains("skid"))g.GetComponent<Renderer>().shadowCastingMode=ShadowCastingMode.Off;
             if(!solid){g.layer=2;g.GetComponent<Collider>().enabled=false;}return g;
         }
         public static void Sign(string text,Vector3 position,float size,Color color,Quaternion rotation=default)
@@ -78,10 +80,10 @@ namespace Totalled
             for(int i=0;i<18;i++)
             {
                 float a=i*.1f;
-                for(int side=-1;side<=1;side+=2)Box("Old skid marks",new Vector3(-2+Mathf.Sin(a)*6+side*.72f,.018f,-9+Mathf.Cos(a)*6),new Vector3(.16f,.008f,.65f),rubber,false,Quaternion.Euler(0,-i*5.7f,0));
+                for(int side=-1;side<=1;side+=2)Box("Old skid marks",new Vector3(-2+Mathf.Sin(a)*(6+side*.72f),.010f,-9+Mathf.Cos(a)*(6+side*.72f)),new Vector3(.19f,.004f,.76f),rubber,false,Quaternion.Euler(0,90+i*5.7f,0));
             }
             // Low-poly industrial skyline beyond the collision course.
-            var brick=Surface(new Color(.36f,.28f,.23f),1,5);var window=SedanView.Material(new Color(.23f,.31f,.33f),.25f,.4f);
+            var brick=Surface(new Color(.36f,.28f,.23f),4,4);var window=SedanView.Material(new Color(.23f,.31f,.33f),.25f,.4f);
             for(int i=0;i<18;i++)
             {
                 float x=-48+(i%9)*12,h=7+(i%3)*3,z=i<9?46:-46;
@@ -89,6 +91,21 @@ namespace Totalled
                 Box("Roof coping",new Vector3(x,h+.2f,z),new Vector3(10.5f,.4f,12.5f),dark);
                 for(int w=-3;w<=3;w+=3)for(int floor=3;floor<h;floor+=3)
                     Box("Warehouse window",new Vector3(x+w,floor,z-Mathf.Sign(z)*6.04f),new Vector3(1.4f,1.5f,.08f),window);
+            }
+            for(int i=-3;i<=3;i++)
+            {
+                float x=i*12;
+                Box("Roll-up loading door",new Vector3(x,1.8f,39.90f),new Vector3(4,3.6f,.10f),dark);
+                for(int slat=1;slat<12;slat++)Box("Shutter rib",new Vector3(x,slat*.29f,39.82f),new Vector3(3.9f,.045f,.04f),concrete);
+                Box("Loading door lintel",new Vector3(x,3.7f,39.7f),new Vector3(4.5f,.22f,.32f),concrete);
+            }
+            for(int i=0;i<8;i++)
+            {
+                float z=-23+i*6;
+                Box("Fence post",new Vector3(30.5f,1.2f,z),new Vector3(.08f,2.4f,.08f),dark);
+                Box("Fence rail",new Vector3(30.5f,2.2f,z+3),new Vector3(.04f,.04f,6),dark);
+                Box("Fence rail",new Vector3(30.5f,.4f,z+3),new Vector3(.04f,.04f,6),dark);
+                for(int bar=0;bar<6;bar++)Box("Fence wire",new Vector3(30.5f,1.2f,z+bar),new Vector3(.015f,2,.015f),dark);
             }
             for(int i=0;i<4;i++)
             {
@@ -107,4 +124,5 @@ namespace Totalled
         }
     }
 }
+
 
