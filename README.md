@@ -13,7 +13,8 @@ Open the project in Unity, open `Assets/TOTALLED/Scenes/CrashLab.unity`, and pre
 | WASD / arrow keys | Throttle, reverse, steer |
 | Space / left Shift (or left Ctrl) | Rear handbrake / all-wheel brake |
 | 1 / 2 / 3 / 4 | Launch same damaged specimen into front / rear / side wall / offset pole |
-| 5 / 6 | Hit the fixed teal target / slide your side into it |
+| 5 / 6 | Hit the other car / slide your side into it |
+| E | Switch which car you drive |
 | H | Show or hide detailed telemetry |
 | [ / ] | Decrease / increase laboratory launch speed |
 | R | Upright and relocate connected structure; preserve all damage |
@@ -46,7 +47,7 @@ Launch the Windows player with `-crashlab-smoke` for a ten-second unattended ren
 - `Assets/TOTALLED/Editor/CrashLabBuild.cs`: scene generation, regression captures and Windows build.
 - `Docs/Design.md`: design intent, acceptance gate and precise limitations.
 
-**Current collision limit:** the teal parked sedan is a fixed compound collision prop. Your car deforms when hitting it, but the target does not move or deform. Dynamic cars and detached parts collide with the static lab and target, but not with each other. The full derby and physically interacting wreck pile are not implemented. See the design contract before interpreting this as a finished BeamNG-style system.
+**Two-car collision prototype:** both sedans use the same deformable simulation and exchange contact forces. Node-to-surface contacts include spawned specimens. Self-collision, full continuous surface collision, and tires rolling on other cars are not implemented. See Docs/Playtest-0.4.md.
 
 ## Publishing playtests
 
@@ -55,5 +56,6 @@ The public source repository is `Dumb-Tony/TOTALLED`. The `gh-pages` branch host
 Use **TOTALLED → Build browser playtest**, or run `CrashLabPublish.BuildWeb` in batch mode with `-buildTarget WebGL`. The output is `Builds/WebGL`; the build step installs the page from `Tools/Playtest/index.html`. Gzip with Unity's decompression fallback works without custom server headers. Publish the contents of that directory to the root of `gh-pages`, keeping `.nojekyll`.
 
 The browser build is the actual Unity simulation, not a rewritten browser approximation. Use a desktop browser with a keyboard and mouse. Mobile controls and multiplayer are not implemented. When reporting bugs, include your browser, impact sequence, and whether you used recovery or spawned additional specimens.
+
 
 

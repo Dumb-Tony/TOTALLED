@@ -105,19 +105,6 @@ namespace Totalled
             Box("TOTALLED sign backing",new Vector3(-9,5,24),new Vector3(19,2.4f,.2f),dark);
             Sign("TOTALLED  /  MOTOR WORKS",new Vector3(-9,5,23.85f),.14f,new Color(.94f,.74f,.40f));
         }
-        public static void ParkedTarget(SphereCollider probe)
-        {
-            var car=new SacrificialSedan(Vector3.zero,probe);var rot=Quaternion.Euler(0,90,0);
-            foreach(var n in car.structure.nodes){n.position=TargetPosition+rot*n.position;n.previous=n.position;}
-            var view=new SedanView(car,new Color(.16f,.38f,.40f));view.Refresh();view.root.name="Parked impact target (fixed prop)";
-            // Compound static body, cabin and wheels. This target is intentionally fixed.
-            var root=new GameObject("Parked target collision");root.transform.SetPositionAndRotation(TargetPosition,rot);
-            ColliderBox(root.transform,new Vector3(0,.79f,0),new Vector3(1.72f,.48f,4.8f));
-            ColliderBox(root.transform,new Vector3(0,1.35f,-.05f),new Vector3(1.36f,.72f,1.4f));
-            foreach(var w in car.wheels)ColliderBox(root.transform,Quaternion.Inverse(rot)*(car.structure.nodes[w.hub].position-TargetPosition),new Vector3(.28f,.72f,.72f));
-            Sign("FIXED IMPACT TARGET",new Vector3(12,2.25f,9),.055f,new Color(.83f,.72f,.43f));
-        }
-        static void ColliderBox(Transform parent,Vector3 center,Vector3 size)
-        {var g=new GameObject("Target collider");g.transform.SetParent(parent,false);g.transform.localPosition=center;g.AddComponent<BoxCollider>().size=size;}
     }
 }
+

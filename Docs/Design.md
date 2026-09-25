@@ -29,7 +29,7 @@ The immediate product is a technical experiment: one Sacrificial Sedan, flat tes
 
 This is an early feasibility prototype. It is not yet a validated vehicle simulator or a completed damage system.
 
-1. **Collision scope:** nodes collide with static Unity colliders, including the teal parked car prop added in 0.3. That target is fixed and does not deform. There is no vehicle-to-vehicle, node-to-triangle, panel self-collision, debris-to-car or wreck-to-car response yet. Detached panels and wheels persist and collide with the ground/environment, but can pass through the car. New specimens preserve old wrecks visually and numerically, but those wrecks are not yet obstacles to another car. This is the next structural collision milestone.
+1. **Collision scope:** static-world collision plus two-way deformable car contacts now operate in shared substeps. The second sedan is dynamic and damageable. Node-to-triangle contacts transfer momentum and load both graphs. Self-collision and tires rolling on cars are absent. Detached node-backed parts participate across specimens, but robust small-debris and full surface collision remain unfinished.
 2. **Surface coverage:** collision uses spheres at structural nodes. Thin obstacles can pass between nodes; swept nodes reduce tunneling but do not constitute continuous surface collision.
 3. **Calibration:** plastic yield maps XPBD constraint force through a tunable effective compliance. Thresholds are prototype tuning values, not automotive material data. Beam rest-length bounds avoid inversion extremes but do not enforce volume or sheet-metal buckling. No claim of energy-conserving crash reconstruction.
 4. **Suspension/tire fidelity:** linked hub plus bounded contact forces approximates suspension/traction. No angular wheel dynamics, differential, slip-ratio tire model or true pneumatic tire simulation. Tire failure currently derives from local attachment distortion; rim wobble is a visual approximation. Low-speed braking and support on inclined surfaces need more driving evaluation.
@@ -45,6 +45,7 @@ Numerical regression: stationary sedan supports its weight without yielding; sub
 Visual/interactive gate: spend at least 20 minutes driving and repeatedly wrecking the same sedan. Inspect front/rear/offset/side impacts at several speeds, rollover/ramp landings, a wheel hanging by one link, a door hanging on a hinge, exposed rim driving, progressive cooling failure and a badly deformed specimen limping away. Inspect both body and skeleton. Ten different impact sequences should produce visibly distinct shapes. Numerical pass alone does not satisfy this gate.
 
 Then: robust surface/self/car/debris collision; wheel and panel constraints; mechanical exposure; sound and impact feedback; performance measurements. Only after these gates add the simplest Last Car Running arena and derby AI. Later possibilities retained from the concept: different vehicle identities and progressively more capable vehicles while retaining this slow starter sedan, figure eight/team/survival modes, physical reinforcement/weight tradeoffs, emergent damage-driven tactics. They are deliberately outside current implementation scope.
+
 
 
 

@@ -71,7 +71,17 @@ namespace Totalled
 
         public void Step(float dt, Action<float> forces)
         {
-            float h = dt / Substeps;
+            Begin(dt);
+            float h=dt/Substeps;
+            for(int sub=0;sub<Substeps;sub++)
+            {
+                Predict(h,forces);
+                for(int it=0;it<Iterations;it++) Solve(h,it);
+                Finish(h);
+            }
+        }
+        public void Begin(float dt)
+        {
             Time += dt;
             PeakImpact *= Mathf.Exp(-dt * 2);
             for (int c = contacts.Count - 1; c >= 0; c--)
@@ -79,8 +89,9 @@ namespace Totalled
                 var s = contacts[c]; s.age += dt;
                 if (s.age > 1) contacts.RemoveAt(c); else contacts[c] = s;
             }
-            for (int sub = 0; sub < Substeps; sub++)
-            {
+        }
+        public void Predict(float h,Action<float> forces)
+        {
                 foreach (var n in nodes) { n.force = Vector3.zero; }
                 forces?.Invoke(h);
                 foreach (var n in nodes)
@@ -92,8 +103,9 @@ namespace Totalled
                     n.grounded = false;
                 }
                 foreach (var b in beams) b.lambda = 0;
-                for (int it = 0; it < Iterations; it++)
-                {
+        }
+        public void Solve(float h,int it)
+        {
                     // Alternate sweep direction to reduce directional solver bias.
                     for (int j = 0; j < beams.Count; j++)
                     {
@@ -120,7 +132,9 @@ namespace Totalled
                         z.position += correction * z.inverseMass;
                     }
                     foreach (var n in nodes) ResolvePosition(n, it == 0);
-                }
+        }
+        public void Finish(float h)
+        {
                 foreach (var b in beams)
                 {
                     if (b.broken) continue;
@@ -173,9 +187,7 @@ namespace Totalled
                     a.velocity += axis * impulse * a.inverseMass;
                     z.velocity -= axis * impulse * z.inverseMass;
                 }
-            }
         }
-
         void ResolvePosition(MassNode n, bool sweep)
         {
             if (probe == null) return;
@@ -228,3 +240,4 @@ namespace Totalled
         }
     }
 }
+

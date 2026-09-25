@@ -5,7 +5,7 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.3.0`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.4.0`.
 
 ## Live checks — 0.2 (historical)
 
@@ -25,7 +25,12 @@ Unity's IL2CPP stripping did not retain collider types constructed implicitly by
 This verifies browser startup and basic lab interactions. It does not establish mobile support, multiplayer, long-session performance, or the full driving/fun acceptance gate. The collision and simulation limitations documented in Design.md still apply.
 
 
-## Live checks — 0.3
+## Live checks — 0.3 (historical)
 
 Published build loads with warm lighting, textured surfaces, node-bound trim, real-time shadows, the parked target, and compact HUD. H opens full telemetry. The 5 target collision produced 120 yielded beams and 9 broken connections in the live browser. The target stayed fixed. The 6 shortcut also starts the sideways test. No browser console errors were observed. Windows launch/crash smoke verification passed with two rendered captures and no errors.
+
+
+## Live checks — 0.4
+
+The public browser build loads and completes a two-way impact using 5. The teal sedan moves out of its bay. Switching into it with E shows retained damage: 62 yielded beams and 0.763 m cumulative plastic travel in the observed run. The original player has 105 yielded beams and 3 broken connections. No console errors were observed. Windows smoke verification also passes.
 

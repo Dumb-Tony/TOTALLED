@@ -153,6 +153,12 @@ namespace Totalled
         public void Tick(float dt)
         {
             Vector3 before=Center;
+            PrepareTick(dt);
+            structure.Step(dt,ApplyWheelForces);
+            DistanceTravelled+=Vector3.Distance(before,Center);
+        }
+        public void PrepareTick(float dt)
+        {
             foreach(var p in parts)
             {
                 float strain=Mathf.Abs(Vector3.Distance(structure.nodes[p.a].position,structure.nodes[p.b].position)-p.span)/p.span;
@@ -161,10 +167,8 @@ namespace Totalled
             temperature=Mathf.Clamp(temperature+((1-parts[0].Condition)*2.2f*Mathf.Abs(throttle)-.25f*parts[0].Condition)*dt,75,160);
             fuel=Mathf.Max(0,fuel-(1-parts[3].Condition)*.003f*dt);
             DriveForceLastStep=0;
-            structure.Step(dt,ApplyWheelForces);
-            DistanceTravelled+=Vector3.Distance(before,Center);
         }
-        void ApplyWheelForces(float dt)
+        public void ApplyWheelForces(float dt)
         {
             float power=parts[1].Condition*parts[2].Condition*Mathf.Clamp01((160-temperature)/35)*(fuel>0?1:0);
             Vector3 up=Up;
@@ -221,6 +225,7 @@ namespace Totalled
         { structure.Relocate(target,Quaternion.Inverse(Orientation),Center,Index(1,0,3)); }
     }
 }
+
 
 
 
