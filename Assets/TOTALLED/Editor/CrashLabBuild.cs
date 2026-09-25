@@ -18,6 +18,17 @@ public static class CrashLabBuild
         AssetDatabase.Refresh();
         string surface="Assets/TOTALLED/Resources/TOTALLED/Surface.mat";
         string debug="Assets/TOTALLED/Resources/TOTALLED/DebugLines.mat";
+        string skyPath="Assets/TOTALLED/Resources/TOTALLED/YardSky.mat";
+        string textPath="Assets/TOTALLED/Resources/TOTALLED/YardText.mat";
+        if(AssetDatabase.LoadAssetAtPath<Material>(textPath)==null)AssetDatabase.CreateAsset(new Material(Shader.Find("TOTALLED/DepthText")),textPath);
+        var yardText=AssetDatabase.LoadAssetAtPath<Material>(textPath);yardText.shader=Shader.Find("TOTALLED/DepthText");EditorUtility.SetDirty(yardText);
+        if(AssetDatabase.LoadAssetAtPath<Material>(skyPath)==null)
+        {
+            var sky=new Material(Shader.Find("Skybox/Procedural"));sky.SetColor("_SkyTint",new Color(.55f,.59f,.65f));
+            sky.SetColor("_GroundColor",new Color(.42f,.40f,.37f));sky.SetFloat("_AtmosphereThickness",1.15f);sky.SetFloat("_Exposure",1.1f);
+            AssetDatabase.CreateAsset(sky,skyPath);
+        }
+        var yardSky=AssetDatabase.LoadAssetAtPath<Material>(skyPath);yardSky.SetColor("_SkyTint",new Color(.5f,.5f,.5f));yardSky.SetFloat("_AtmosphereThickness",.85f);EditorUtility.SetDirty(yardSky);
         if(AssetDatabase.LoadAssetAtPath<Material>(surface)==null)AssetDatabase.CreateAsset(new Material(Shader.Find("Standard")),surface);
         if(AssetDatabase.LoadAssetAtPath<Material>(debug)==null)AssetDatabase.CreateAsset(new Material(Shader.Find("Hidden/Internal-Colored")),debug);
         Directory.CreateDirectory("Assets/TOTALLED/Scenes");
@@ -25,7 +36,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.2.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.3.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;
@@ -63,6 +74,7 @@ public static class CrashLabBuild
         try
         {
             CrashLabRevisionChecks.Run(Check);
+            CrashLabTargetChecks.Run(lab,Check);
             Run(lab,250);var settled=Record(car,"settled");Capture(lab,"01-pristine");
             Check(car.structure.Finite(),"Stationary structure stays finite after five seconds.");
             Check(settled.broken==0,"Gravity and static suspension load do not break pristine beams.");
@@ -138,4 +150,5 @@ public static class CrashLabBuild
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Windows build failed: "+result.summary.result);
     }
 }
+
 

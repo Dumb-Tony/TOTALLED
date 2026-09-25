@@ -21,6 +21,7 @@ namespace Totalled
         readonly float[] nodePlastic, nodeSpan;
         readonly Vector3[] originalPositions;
         readonly HashSet<int[]> tornFaces = new HashSet<int[]>();
+        readonly SedanTrim trim;
         public bool bodyVisible = true, debugVisible, componentsVisible;
         public int debugMode;
         public static Material Material(Color color, float metallic=0, float smoothness=.3f)
@@ -29,13 +30,13 @@ namespace Totalled
             var m=template!=null?new Material(template):new Material(Shader.Find("Standard"));
             m.color=color; m.SetFloat("_Metallic",metallic);m.SetFloat("_Glossiness",smoothness); return m;
         }
-        public SedanView(SacrificialSedan car)
+        public SedanView(SacrificialSedan car, Color? color=null)
         {
             this.car=car;root=new GameObject("Sacrificial Sedan • deformable specimen");root.layer=2;
             nodePlastic=new float[car.structure.nodes.Count];nodeSpan=new float[nodePlastic.Length];
             originalPositions=new Vector3[nodePlastic.Length];
             for(int i=0;i<originalPositions.Length;i++) originalPositions[i]=car.structure.nodes[i].position;
-            paint=Material(new Color(.88f,.52f,.08f),.55f);rubber=Material(new Color(.045f,.052f,.061f));steel=Material(new Color(.28f,.32f,.34f),.8f);
+            paint=CrashLabArt.Surface(color??new Color(.58f,.22f,.12f),2);rubber=CrashLabArt.Surface(new Color(.10f,.105f,.11f),3);steel=Material(new Color(.42f,.44f,.43f),.6f);
             creased=Material(new Color(.37f,.24f,.11f),.25f,.12f);
             nodeMat=Material(new Color(.2f,1,.83f));componentMat=Material(new Color(.15f,.65f,.85f));
             shellMesh=NewMesh("Node skinned body",paint,out shellRenderer);
@@ -50,10 +51,18 @@ namespace Totalled
             {
                 var tire=Primitive(PrimitiveType.Cylinder,w.name+" tire",rubber);wheelObjects.Add(tire);
                 var rim=Primitive(PrimitiveType.Cylinder,w.name+" rim",steel);rimObjects.Add(rim);
+                foreach(float side in new[]{-1.01f,1.01f})for(int spoke=0;spoke<6;spoke++)
+                {
+                    var slot=Primitive(PrimitiveType.Cube,"Wheel ventilation slot",rubber);slot.SetParent(rim,false);
+                    float angle=spoke*Mathf.PI/3;
+                    slot.localPosition=new Vector3(Mathf.Sin(angle)*.32f,side,Mathf.Cos(angle)*.32f);
+                    slot.localRotation=Quaternion.Euler(0,spoke*60,0);slot.localScale=new Vector3(.12f,.025f,.19f);
+                }
             }
             foreach(var n in car.structure.nodes) nodeObjects.Add(Primitive(PrimitiveType.Sphere,"Mass node",nodeMat));
             foreach(var p in car.parts) componentObjects.Add(Primitive(PrimitiveType.Cube,p.name,componentMat));
             for(int i=0;i<4;i++) pillars.Add(Primitive(PrimitiveType.Cylinder,"Cabin pillar",steel));
+            trim=new SedanTrim(car,root.transform);
             Refresh();
         }
         Mesh NewMesh(string name, Material mat, out MeshRenderer renderer)
@@ -70,7 +79,7 @@ namespace Totalled
         }
         void Faces(Mesh mesh,IEnumerable<int[]> faces)
         {
-            var vertices=new List<Vector3>();var intact=new List<int>();var damaged=new List<int>();
+            var vertices=new List<Vector3>();var uv=new List<Vector2>();var intact=new List<int>();var damaged=new List<int>();
             foreach(var q in faces)
             {
                 // A skin patch cannot bridge structure that has separated by metres.
@@ -88,15 +97,18 @@ namespace Totalled
                 float strain=0;foreach(int n in q)strain+=nodePlastic[n];
                 var triangles=strain/q.Length>.02f?damaged:intact;
                 foreach(int n in q) vertices.Add(car.structure.nodes[n].position);
+                uv.AddRange(new[]{Vector2.zero,Vector2.up,Vector2.one,Vector2.right});
                 triangles.AddRange(new[]{v,v+1,v+2,v,v+2,v+3});
                 // Reverse faces need separate vertices so their normals do not cancel.
                 foreach(int n in q) vertices.Add(car.structure.nodes[n].position);
+                uv.AddRange(new[]{Vector2.zero,Vector2.up,Vector2.one,Vector2.right});
                 triangles.AddRange(new[]{v+6,v+5,v+4,v+7,v+6,v+4});
             }
-            mesh.Clear();mesh.SetVertices(vertices);mesh.subMeshCount=2;mesh.SetTriangles(intact,0);mesh.SetTriangles(damaged,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.subMeshCount=2;mesh.SetTriangles(intact,0);mesh.SetTriangles(damaged,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
         }
         public void Refresh()
         {
+            trim?.Refresh(bodyVisible);
             System.Array.Clear(nodePlastic,0,nodePlastic.Length);System.Array.Clear(nodeSpan,0,nodeSpan.Length);
             foreach(var beam in car.structure.beams)
             {nodePlastic[beam.a]+=beam.plastic;nodePlastic[beam.b]+=beam.plastic;nodeSpan[beam.a]+=beam.initial;nodeSpan[beam.b]+=beam.initial;}

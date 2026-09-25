@@ -5,9 +5,9 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.2.0`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.3.0`.
 
-## Live checks — 0.2
+## Live checks — 0.2 (historical)
 
 Tested the actual public Pages URL in a desktop Chromium-based browser:
 
@@ -23,4 +23,9 @@ Tested the actual public Pages URL in a desktop Chromium-based browser:
 Unity's IL2CPP stripping did not retain collider types constructed implicitly by CreatePrimitive. `Assets/TOTALLED/link.xml` preserves those types. The build also uses content-hashed filenames, so old cached asset data cannot be mixed with a newer WebAssembly runtime. The observed mixed-cache startup failure was resolved by loading the versioned build.
 
 This verifies browser startup and basic lab interactions. It does not establish mobile support, multiplayer, long-session performance, or the full driving/fun acceptance gate. The collision and simulation limitations documented in Design.md still apply.
+
+
+## Live checks — 0.3
+
+Published build loads with warm lighting, textured surfaces, node-bound trim, real-time shadows, the parked target, and compact HUD. H opens full telemetry. The 5 target collision produced 120 yielded beams and 9 broken connections in the live browser. The target stayed fixed. The 6 shortcut also starts the sideways test. No browser console errors were observed. Windows launch/crash smoke verification passed with two rendered captures and no errors.
 

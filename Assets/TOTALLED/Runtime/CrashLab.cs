@@ -12,6 +12,7 @@ namespace Totalled
         readonly List<SedanView> views=new List<SedanView>();
         SphereCollider probe;
         bool paused, slow, orbit, body=true, debug, components;
+        bool telemetry;
         int debugMode;
         float yaw=25, pitch=24, distance=9;
         public float LaunchSpeed=18;
@@ -50,6 +51,7 @@ namespace Totalled
             Label("TOTALLED / CRASH LAB",new Vector3(-17,3.9f,23.4f),.38f);
             Label("01  /  FRONTAL IMPACT",new Vector3(-5,3.35f,23.4f),.23f);
             Label("02 / OFFSET",new Vector3(-8,2.4f,12),.18f);
+            CrashLabArt.Dress(LabCamera);CrashLabArt.ParkedTarget(probe);
             Physics.SyncTransforms();NewSpecimen();MoveCamera(true);
         }
         void Start()
@@ -81,6 +83,7 @@ namespace Totalled
             if(Input.GetKeyDown(KeyCode.B))body=!body;
             if(Input.GetKeyDown(KeyCode.V))debug=!debug;
             if(Input.GetKeyDown(KeyCode.C))components=!components;
+            if(Input.GetKeyDown(KeyCode.H))telemetry=!telemetry;
             if(Input.GetKeyDown(KeyCode.Tab))debugMode=(debugMode+1)%3;
             if(Input.GetKeyDown(KeyCode.N))NewSpecimen();
             if(Input.GetKeyDown(KeyCode.R))Active.Recover(new Vector3(0,1.1f,0));
@@ -88,6 +91,8 @@ namespace Totalled
             if(Input.GetKeyDown(KeyCode.Alpha2))Impact(1);
             if(Input.GetKeyDown(KeyCode.Alpha3))Impact(2);
             if(Input.GetKeyDown(KeyCode.Alpha4))Impact(3);
+            if(Input.GetKeyDown(KeyCode.Alpha5))Impact(4);
+            if(Input.GetKeyDown(KeyCode.Alpha6))Impact(5);
             if(Input.GetKeyDown(KeyCode.LeftBracket))LaunchSpeed=Mathf.Max(6,LaunchSpeed-2);
             if(Input.GetKeyDown(KeyCode.RightBracket))LaunchSpeed=Mathf.Min(36,LaunchSpeed+2);
             if(Input.GetKeyDown(KeyCode.Period)&&paused)Simulate(.02f);
@@ -103,6 +108,13 @@ namespace Totalled
         public void Impact(int direction)
         {
             paused=false;
+            if(direction>=4)
+            {
+                // 5: nose into target's flank. 6: slide the player sideways into it.
+                Vector3 start=direction==4?new Vector3(12,1.1f,-2):new Vector3(3,1.1f,9);
+                Active.Recover(start);Active.Launch((direction==4?Vector3.forward:Vector3.right)*LaunchSpeed);
+                MoveCamera(true);return;
+            }
             Active.Recover(direction==0?new Vector3(0,1.1f,14):direction==1?new Vector3(0,1.1f,-14):direction==2?new Vector3(14,1.1f,0):new Vector3(6.3f,1.1f,5));
             Active.Launch((direction==0||direction==3?Vector3.forward:direction==1?Vector3.back:Vector3.right)*LaunchSpeed);
             MoveCamera(true);
@@ -124,8 +136,21 @@ namespace Totalled
             if(Active==null)return;
             if(titleStyle==null) { titleStyle=new GUIStyle(GUI.skin.label){fontSize=25,fontStyle=FontStyle.Bold};titleStyle.normal.textColor=new Color(1,.69f,.22f);textStyle=new GUIStyle(GUI.skin.label){fontSize=15};smallStyle=new GUIStyle(GUI.skin.label){fontSize=12}; }
             float scale=Mathf.Clamp(Screen.height/900f,.8f,1.5f);GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
+            if(!telemetry)
+            {
+                float width=Screen.width/scale,height=Screen.height/scale;
+                GUI.color=new Color(.06f,.09f,.11f,.94f);GUI.DrawTexture(new Rect(18,18,265,116),Texture2D.whiteTexture);GUI.color=Color.white;
+                GUI.Label(new Rect(32,26,240,32),"TOTALLED",titleStyle);
+                GUI.Label(new Rect(32,58,240,23),"MOTOR WORKS  /  CRASH LAB 0.3",smallStyle);
+                GUI.Label(new Rect(32,88,240,28),$"{Mathf.Abs(Active.Speed)*3.6f:000} KM/H   {(paused?"PAUSED":Active.handbrake?"HANDBRAKE":Active.brake>0?"BRAKING":"SACRIFICIAL SEDAN")}",smallStyle);
+                GUI.color=new Color(.06f,.09f,.11f,.92f);GUI.DrawTexture(new Rect(18,height-90,Mathf.Min(690,width-36),72),Texture2D.whiteTexture);GUI.color=Color.white;
+                GUI.Label(new Rect(30,height-86,width-55,24),"WASD drive   SPACE handbrake   SHIFT brake   R recover   H telemetry",smallStyle);
+                GUI.Label(new Rect(30,height-63,width-55,24),"5 hit parked car   6 side impact   1–4 lab impacts   N new car",smallStyle);
+                GUI.Label(new Rect(30,height-40,width-55,24),"Right mouse: orbit / wheel: zoom   •   Teal car = fixed collision prop",smallStyle);
+                return;
+            }
             GUI.Box(new Rect(18,18,360,480),GUIContent.none);
-            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.2",smallStyle);GUILayout.Space(12);
+            GUILayout.BeginArea(new Rect(32,27,335,465));GUILayout.Label("TOTALLED",titleStyle);GUILayout.Label("CRASH LAB  /  SACRIFICIAL SEDAN  /  0.3",smallStyle);GUILayout.Space(12);
             GUILayout.Label($"{Mathf.Abs(Active.Speed)*3.6f:0} km/h    {(paused?"PAUSED":slow?"SLOW MOTION":"LIVE")}",textStyle);
             GUILayout.Label(Active.handbrake?"HANDBRAKE / REAR TIRES LOCKING":Active.brake>0?"BRAKE / FOUR-WHEEL STOP":"ROLLING / FULL TIRE GRIP",smallStyle);
             GUILayout.Label($"{Active.structure.nodes.Count} nodes  /  {Active.structure.beams.Count} beams",textStyle);
@@ -144,7 +169,7 @@ namespace Totalled
             GUILayout.Label("R recover, keep damage  •  N new car, keep wreck",smallStyle);
             GUILayout.Label("P pause  •  . step  •  T slow motion  •  B body  •  V skeleton",smallStyle);
             GUILayout.Label($"TAB stress / plastic / broken  •  C components  •  RMB orbit / scroll zoom",smallStyle);
-            GUILayout.Label("Prototype: world collisions only; specimens do not yet collide with each other.",smallStyle);
+            GUILayout.Label("5 parked target / 6 sideways • H hide telemetry • Target is fixed",smallStyle);
             GUILayout.EndArea();
             if(debug) { GUI.Label(new Rect(395,25,500,30),"STRUCTURE / "+new[]{"STRESS","PLASTIC TRAVEL","BROKEN CONNECTIONS"}[debugMode],textStyle); }
         }

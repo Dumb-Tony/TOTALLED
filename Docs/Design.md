@@ -29,12 +29,12 @@ The immediate product is a technical experiment: one Sacrificial Sedan, flat tes
 
 This is an early feasibility prototype. It is not yet a validated vehicle simulator or a completed damage system.
 
-1. **Collision scope:** nodes collide with static Unity colliders. There is no vehicle-to-vehicle, node-to-triangle, panel self-collision, debris-to-car or wreck-to-car response yet. Detached panels and wheels persist and collide with the ground/environment, but can pass through the car. New specimens preserve old wrecks visually and numerically, but those wrecks are not yet obstacles to another car. This is the next structural collision milestone.
+1. **Collision scope:** nodes collide with static Unity colliders, including the teal parked car prop added in 0.3. That target is fixed and does not deform. There is no vehicle-to-vehicle, node-to-triangle, panel self-collision, debris-to-car or wreck-to-car response yet. Detached panels and wheels persist and collide with the ground/environment, but can pass through the car. New specimens preserve old wrecks visually and numerically, but those wrecks are not yet obstacles to another car. This is the next structural collision milestone.
 2. **Surface coverage:** collision uses spheres at structural nodes. Thin obstacles can pass between nodes; swept nodes reduce tunneling but do not constitute continuous surface collision.
 3. **Calibration:** plastic yield maps XPBD constraint force through a tunable effective compliance. Thresholds are prototype tuning values, not automotive material data. Beam rest-length bounds avoid inversion extremes but do not enforce volume or sheet-metal buckling. No claim of energy-conserving crash reconstruction.
 4. **Suspension/tire fidelity:** linked hub plus bounded contact forces approximates suspension/traction. No angular wheel dynamics, differential, slip-ratio tire model or true pneumatic tire simulation. Tire failure currently derives from local attachment distortion; rim wobble is a visual approximation. Low-speed braking and support on inclined surfaces need more driving evaluation.
 5. **Mechanicals:** component span deformation is a local crush proxy. Cooling/power/fuel consequences work, but there are no physical engine mounts, detailed gears, driveshaft collisions, fire or exposed-component collision meshes yet.
-6. **Visuals:** low-resolution procedural body, open windows, no proper wheel arches, dashboard, lights/glass shards, sounds or particles. Make deformation convincing before producing art.
+6. **Visuals:** low-resolution procedural body with node-bound opaque glass, trim and lamp lenses; no proper wheel arches, dashboard, glass shards, sounds or particles. Make deformation convincing before producing art.
 7. **Persistence:** damage and debris persist for the current session. Disk save/load of vehicle states is not implemented.
 8. **Performance:** managed solver and dynamic debug meshes are intentionally inspectable. No jobs/Burst, sleeping islands, broad-phase car collision or multi-car scaling claim. Benchmark before expanding car counts.
 
@@ -45,5 +45,6 @@ Numerical regression: stationary sedan supports its weight without yielding; sub
 Visual/interactive gate: spend at least 20 minutes driving and repeatedly wrecking the same sedan. Inspect front/rear/offset/side impacts at several speeds, rollover/ramp landings, a wheel hanging by one link, a door hanging on a hinge, exposed rim driving, progressive cooling failure and a badly deformed specimen limping away. Inspect both body and skeleton. Ten different impact sequences should produce visibly distinct shapes. Numerical pass alone does not satisfy this gate.
 
 Then: robust surface/self/car/debris collision; wheel and panel constraints; mechanical exposure; sound and impact feedback; performance measurements. Only after these gates add the simplest Last Car Running arena and derby AI. Later possibilities retained from the concept: different vehicle identities and progressively more capable vehicles while retaining this slow starter sedan, figure eight/team/survival modes, physical reinforcement/weight tradeoffs, emergent damage-driven tactics. They are deliberately outside current implementation scope.
+
 
 
