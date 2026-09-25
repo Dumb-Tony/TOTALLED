@@ -10,9 +10,9 @@
 </style>
 </head>
 <body>
-<header><div class="brand">TOTALLED<small>CRASH LAB / PLAYTEST 0.6</small></div><nav><a href="https://github.com/Dumb-Tony/TOTALLED/issues/new" target="_blank" rel="noopener">Report a bug</a><a href="https://github.com/Dumb-Tony/TOTALLED" target="_blank" rel="noopener">Source</a><button id="fullscreen" disabled>Full screen</button></nav></header>
+<header><div class="brand">TOTALLED<small>CRASH LAB / PLAYTEST 0.7</small></div><nav><a href="https://github.com/Dumb-Tony/TOTALLED/issues/new" target="_blank" rel="noopener">Report a bug</a><a href="https://github.com/Dumb-Tony/TOTALLED" target="_blank" rel="noopener">Source</a><button id="fullscreen" disabled>Full screen</button></nav></header>
 <main><canvas id="game" width="1600" height="900" tabindex="0" aria-label="TOTALLED Crash Lab game. Use WASD to drive."></canvas><section id="loading"><h1>CRASH LAB</h1><p>Two sedans. Every impact stays.<br>Use a desktop browser with a keyboard and mouse.</p><progress id="progress" max="1" value="0"></progress><p id="message" role="status">Loading the playtest…</p></section></main>
-<footer><div class="keys"><kbd>WASD</kbd> drive &nbsp; <kbd>Space</kbd> handbrake &nbsp; <kbd>Shift</kbd> brake &nbsp; <kbd>5 / 6</kbd> car impacts &nbsp; <kbd>R</kbd> recover, keep damage &nbsp; <kbd>E</kbd> switch cars &nbsp; <kbd>N</kbd> new car</div><span class="warning">Both cars move and deform. E switches the car you drive.</span></footer>
+<footer><div class="keys"><kbd>WASD</kbd> drive &nbsp; <kbd>Space</kbd> handbrake &nbsp; <kbd>Shift</kbd> brake &nbsp; <kbd>5 / 6</kbd> car impacts &nbsp; <kbd>R</kbd> recover, keep damage &nbsp; <kbd>E</kbd> switch cars &nbsp; <kbd>N</kbd> new car &nbsp; <kbd>M</kbd> mute</div><span class="warning">Both cars move and deform. E switches the car you drive.</span></footer>
 <script>
 const canvas=document.getElementById('game'),message=document.getElementById('message'),loading=document.getElementById('loading');
 let unity=null;
@@ -21,11 +21,11 @@ canvas.addEventListener('contextmenu',event=>event.preventDefault());
 canvas.addEventListener('pointerdown',()=>canvas.focus());
 canvas.addEventListener('keydown',event=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(event.code))event.preventDefault();});
 document.getElementById('fullscreen').onclick=()=>{if(unity){unity.SetFullscreen(1);canvas.focus();}};
-const loader=document.createElement('script');loader.src='Build/a037a5fee67cb69273788c8a0ad8d610.loader.js';
+const loader=document.createElement('script');loader.src='Build/5845ba5c629851f9d2ff5f48c48457fe.loader.js';
 loader.onerror=()=>fail('The game download failed. Please refresh to try again.');
 loader.onload=()=>createUnityInstance(canvas,{
- dataUrl:'Build/c8eee5548edc5f91f4351006d325f1e1.data.unityweb',frameworkUrl:'Build/71bebbe622260c355767f61cde6b68b8.framework.js.unityweb',codeUrl:'Build/35232ca7698a7f762ea3f4232558ee25.wasm.unityweb',
- streamingAssetsUrl:'StreamingAssets',companyName:'TOTALLED',productName:'TOTALLED Crash Lab',productVersion:'0.6.0',devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5),
+ dataUrl:'Build/a38c5f692699e7af3e4dc83959d4303f.data.unityweb',frameworkUrl:'Build/6e73cfeccebe84d48eb8e1715f16abb3.framework.js.unityweb',codeUrl:'Build/8195aec7e7de9d047bc4d9b78b8c7bd1.wasm.unityweb',
+ streamingAssetsUrl:'StreamingAssets',companyName:'TOTALLED',productName:'TOTALLED Crash Lab',productVersion:'0.7.0',devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5),
  showBanner:(text,type)=>{if(type==='error')fail(text);else console.warn(text);}
 },progress=>{document.getElementById('progress').value=progress;message.textContent='Loading the playtest… '+Math.round(progress*100)+'%';})
 .then(instance=>{unity=instance;window.crashLabPlayer=instance;loading.classList.add('hidden');document.getElementById('fullscreen').disabled=false;canvas.focus();})
@@ -33,3 +33,4 @@ loader.onload=()=>createUnityInstance(canvas,{
 document.body.appendChild(loader);
 </script>
 </body></html>
+
