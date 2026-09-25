@@ -44,7 +44,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.8.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.8.1";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;
@@ -81,6 +81,7 @@ public static class CrashLabBuild
         var car=lab.Active;
         try
         {
+            CrashLabBroadphaseChecks.Run(Check);
             CrashLabRevisionChecks.Run(Check);
             CrashLabWheelChecks.Run(Check);
             CrashLabCrumpleChecks.Run(Check);

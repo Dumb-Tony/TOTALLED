@@ -10,6 +10,11 @@ namespace Totalled
         public Vector3 position, previous, velocity, force, original;
         public float inverseMass, radius;
         public bool grounded;
+        // Static-world broad phase, reused during constraint sweeps. Requery
+        // whenever corrections leave the conservative neighbourhood.
+        internal readonly Collider[] nearby = new Collider[32];
+        internal int nearbyCount = -1;
+        internal Vector3 nearbyCenter;
         public MassNode(Vector3 p, float mass, float radius)
         { position = previous = original = p; inverseMass = 1f / mass; this.radius = radius; }
     }
@@ -43,7 +48,7 @@ namespace Totalled
         public int Substeps = 10, Iterations = 8;
         public float PeakImpact, Time;
         public double PlasticWork;
-        readonly Collider[] overlaps = new Collider[16];
+
         readonly SphereCollider probe;
         readonly int collisionMask = 1 << 0;
 
@@ -96,7 +101,7 @@ namespace Totalled
                 forces?.Invoke(h);
                 foreach (var n in nodes)
                 {
-                    n.previous = n.position;
+                    n.previous = n.position; n.nearbyCount = -1;
                     n.velocity += (Physics.gravity + n.force * n.inverseMass) * h;
                     n.velocity *= Mathf.Exp(-.035f * h);
                     n.position += n.velocity * h;
@@ -200,11 +205,17 @@ namespace Totalled
                 n.position = n.previous + consumed + Vector3.ProjectOnPlane(travel-consumed,hit.normal);
                 n.grounded = true;
             }
-            int count = Physics.OverlapSphereNonAlloc(n.position, n.radius, overlaps, collisionMask, QueryTriggerInteraction.Ignore);
-            probe.radius = n.radius;
+            if (n.nearbyCount < 0 || (n.position-n.nearbyCenter).sqrMagnitude > .04f)
+            {
+                n.nearbyCenter=n.position;
+                n.nearbyCount=Physics.OverlapSphereNonAlloc(n.position,n.radius+.25f,n.nearby,collisionMask,QueryTriggerInteraction.Ignore);
+            }
+            int count=n.nearbyCount;
             for (int i = 0; i < count; i++)
             {
-                var c = overlaps[i];
+                var c = n.nearby[i];
+                if(c.bounds.SqrDistance(n.position)>n.radius*n.radius)continue;
+                if(probe.radius!=n.radius)probe.radius=n.radius;
                 if (Physics.ComputePenetration(probe, n.position, Quaternion.identity, c, c.transform.position, c.transform.rotation,
                     out Vector3 direction, out float distance))
                 { n.position += direction * (distance + .0001f); n.grounded = true; }
@@ -228,7 +239,7 @@ namespace Totalled
             foreach (int i in linked)
             {
                 var n = nodes[i]; n.position = target + rotation * (n.position - center);
-                n.previous = n.position; n.velocity = Vector3.zero;
+                n.previous = n.position; n.nearbyCount = -1; n.velocity = Vector3.zero;
             }
         }
         public bool Finite()
@@ -240,4 +251,3 @@ namespace Totalled
         }
     }
 }
-

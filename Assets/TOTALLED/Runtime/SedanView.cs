@@ -22,6 +22,12 @@ namespace Totalled
         readonly Vector3[] originalPositions;
         readonly HashSet<int[]> tornFaces = new HashSet<int[]>();
         readonly List<int> insideFaces=new List<int>();
+        readonly List<Vector3> vertices=new List<Vector3>(4096);
+        readonly List<Vector2> uv=new List<Vector2>(4096);
+        readonly List<int> intact=new List<int>(8192),damaged=new List<int>(8192);
+        readonly Vector3[] points=new Vector3[4];
+        readonly Vector2[] coords=new Vector2[4];
+        readonly float[] us=new float[4],vs=new float[4];
         bool reverseFace;
         readonly SedanTrim trim;
         readonly SedanInterior interior;
@@ -92,7 +98,7 @@ namespace Totalled
         void Faces(Mesh mesh,IEnumerable<int[]> faces)
         {
             insideFaces.Clear();
-            var vertices=new List<Vector3>();var uv=new List<Vector2>();var intact=new List<int>();var damaged=new List<int>();
+            vertices.Clear();uv.Clear();intact.Clear();damaged.Clear();
             foreach(var q in faces)
             {
                 // A skin patch cannot bridge structure that has separated by metres.
@@ -133,7 +139,7 @@ namespace Totalled
                             Vector3 right=car.Right*Mathf.Sign((n0.original-car.structure.nodes[19].original).x);
                             Vector2 base0=SurfaceUV(n0.original,n0.original,n2.original),base1=SurfaceUV(n3.original,n0.original,n2.original);
                             float z0=Mathf.Lerp(base0.x,base1.x,u),z1=Mathf.Lerp(base0.x,base1.x,v);
-                            Emit(vertices,uv,triangles,Side(bottom0,top0,right,a),Side(bottom0,top0,right,b),Side(bottom1,top1,right,c),Side(bottom1,top1,right,d),new[]{new Vector2(z0,a),new Vector2(z0,b),new Vector2(z1,c),new Vector2(z1,d)});
+                            Emit(vertices,uv,triangles,Side(bottom0,top0,right,a),Side(bottom0,top0,right,b),Side(bottom1,top1,right,c),Side(bottom1,top1,right,d),Coordinates(z0,a,z0,b,z1,c,z1,d));
                         }
                     }
                 }
@@ -145,9 +151,9 @@ namespace Totalled
                     Vector3 normal=Vector3.Cross(p1-p0,p3-p0).normalized;if(Vector3.Dot(normal,car.Up)<0)normal=-normal;
                     for(int y=0;y<segments;y++)for(int x=0;x<segments;x++)
                     {
-                        Vector3[] points=new Vector3[4];Vector2[] coords=new Vector2[4];
-                        float[] us={x/(float)segments,(x+1f)/segments,(x+1f)/segments,x/(float)segments};
-                        float[] vs={y/(float)segments,y/(float)segments,(y+1f)/segments,(y+1f)/segments};
+
+                        us[0]=us[3]=x/(float)segments;us[1]=us[2]=(x+1f)/segments;
+                        vs[0]=vs[1]=y/(float)segments;vs[2]=vs[3]=(y+1f)/segments;
                         for(int k=0;k<4;k++)
                         {
                             float u=us[k],v=vs[k];Vector3 rest=Vector3.Lerp(Vector3.Lerp(n0.original,n1.original,u),Vector3.Lerp(n3.original,n2.original,u),v);
@@ -173,12 +179,17 @@ namespace Totalled
         }
         static float Arch(float z)
         {float d=Mathf.Min(Mathf.Abs(z-1.6f),Mathf.Abs(z+1.6f));return d>=.46f?0:Mathf.Clamp01((.40f+Mathf.Sqrt(.46f*.46f-d*d)-.58f)/.46f);}
+        Vector2[] Coordinates(float a,float b,float c,float d,float e,float f,float g,float h)
+        {coords[0]=new Vector2(a,b);coords[1]=new Vector2(c,d);coords[2]=new Vector2(e,f);coords[3]=new Vector2(g,h);return coords;}
+        static void Triangle(List<int> target,int a,int b,int c){target.Add(a);target.Add(b);target.Add(c);}
         void Emit(List<Vector3> vertices,List<Vector2> uv,List<int> triangles,Vector3 a,Vector3 b,Vector3 c,Vector3 d,Vector2[] coords)
         {
-            int v=vertices.Count;vertices.AddRange(new[]{a,b,c,d,a,b,c,d});
-            uv.AddRange(coords);uv.AddRange(coords);
-            triangles.AddRange(reverseFace?new[]{v+2,v+1,v,v+3,v+2,v}:new[]{v,v+1,v+2,v,v+2,v+3});
-            insideFaces.AddRange(reverseFace?new[]{v+4,v+5,v+6,v+4,v+6,v+7}:new[]{v+6,v+5,v+4,v+7,v+6,v+4});
+            int v=vertices.Count;
+            for(int face=0;face<2;face++){vertices.Add(a);vertices.Add(b);vertices.Add(c);vertices.Add(d);for(int i=0;i<4;i++)uv.Add(coords[i]);}
+            if(reverseFace)
+            {Triangle(triangles,v+2,v+1,v);Triangle(triangles,v+3,v+2,v);Triangle(insideFaces,v+4,v+5,v+6);Triangle(insideFaces,v+4,v+6,v+7);}
+            else
+            {Triangle(triangles,v,v+1,v+2);Triangle(triangles,v,v+2,v+3);Triangle(insideFaces,v+6,v+5,v+4);Triangle(insideFaces,v+7,v+6,v+4);}
         }
         public void Refresh()
         {

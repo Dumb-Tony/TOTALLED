@@ -1,0 +1,29 @@
+{
+    "scope": "Unity editor physics only; 150 ticks per collision scenario. Not browser FPS.",
+    "scenarios": [
+        {
+            "direction": 0,
+            "meanMs": 10.869966666666668,
+            "p95Ms": 11.6487,
+            "maxMs": 14.2958,
+            "solveMs": 6.619598666666665,
+            "contactMs": 2.6240179999999995
+        },
+        {
+            "direction": 1,
+            "meanMs": 9.042984,
+            "p95Ms": 11.305800000000001,
+            "maxMs": 11.8184,
+            "solveMs": 6.634162666666667,
+            "contactMs": 0.8465140000000001
+        },
+        {
+            "direction": 2,
+            "meanMs": 10.678622666666667,
+            "p95Ms": 11.699100000000001,
+            "maxMs": 12.0484,
+            "solveMs": 6.634204666666671,
+            "contactMs": 2.455949333333333
+        }
+    ]
+}

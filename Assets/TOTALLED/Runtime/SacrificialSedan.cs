@@ -73,9 +73,13 @@ namespace Totalled
                         if((za==0&&zb==1)||(za==5&&zb==6))continue;
                         bool end=za<=1||zb>=5;
                         bool transition=(za==1&&zb==2)||(za==4&&zb==5);
-                        float yield=transition?.032f:end?.020f:.15f;
+                        // Upper door rails and lateral cabin bracing yield locally; retain
+                        // stronger floor/sill members to support suspension and driving.
+                        bool sideZone=za>=2&&zb<=4&&(a%3!=1||b%3!=1);
+                        bool upper=(a/3)%2==1||(b/3)%2==1;
+                        float yield=transition?.032f:end?.020f:sideZone?(upper?.018f:.050f):.15f;
                         int beam=structure.AddBeam(a, b, end ? 2e-8f : 6e-9f, yield, end ? 1.05f : 1.6f);
-                        structure.beams[beam].plasticRate=end?120:24;
+                        structure.beams[beam].plasticRate=end?120:sideZone?85:24;
                     }
                 }
             // Rendered lower shell uses the exact collision / structural nodes.
@@ -141,9 +145,9 @@ namespace Totalled
             p.nodes[9]=structure.AddNode(origin+center-normal*.18f,2,.045f);
             for(int i=0;i<9;i++)
             {
-                int brace=structure.AddBeam(p.nodes[i],p.nodes[9],3e-9f,.07f,1.3f);structure.beams[brace].damping=.3f;
+                int brace=structure.AddBeam(p.nodes[i],p.nodes[9],3e-9f,name.EndsWith("door")?.008f:.07f,1.3f);structure.beams[brace].damping=.3f;if(name.EndsWith("door"))structure.beams[brace].plasticRate=100;
                 for(int j=i+1;j<9;j++)if(Mathf.Abs(i%3-j%3)<=1&&Mathf.Abs(i/3-j/3)<=1)
-                {int edge=structure.AddBeam(p.nodes[i],p.nodes[j],3e-9f,.065f,1.3f);structure.beams[edge].damping=.2f;}
+                {int edge=structure.AddBeam(p.nodes[i],p.nodes[j],3e-9f,name.EndsWith("door")?.015f:.065f,1.3f);structure.beams[edge].damping=.2f;if(name.EndsWith("door"))structure.beams[edge].plasticRate=100;}
             }
             for(int row=0;row<2;row++)for(int col=0;col<2;col++)
             {int i=row*3+col;p.faces.Add(new[]{p.nodes[i],p.nodes[i+1],p.nodes[i+4],p.nodes[i+3]});}

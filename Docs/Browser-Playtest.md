@@ -5,7 +5,7 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.8.0`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.8.1`.
 
 ## Live checks — 0.2 (historical)
 
@@ -62,3 +62,9 @@ Packaged Windows startup, repeated collisions, engine/tire audio sources and ski
 
 Deployment verification: GitHub Pages reports the 0.8 deployment built successfully. The live page identifies PLAYTEST 0.8. All four referenced loader/data/framework/WebAssembly assets return HTTP 200 and byte-match the successful local build by SHA-256. Browser interaction was not retested for the reason above.
 
+
+## Build checks — 0.8.1
+
+All 64 physics checks pass. Left/right T-bones leave 0.166 / 0.171 m permanent door dents relative to each door's corner plane. The swept-node hierarchy matches exhaustive candidates over 200 incremental updates. Collision timing across three 150-tick scenarios averages 9.04–10.87 ms, with 95th percentiles 11.31–11.70 ms. These are editor physics timings, not browser FPS.
+
+The packaged Windows smoke test passes with three captures, two engine audio sources, tire scrub audio, 648 skid vertices and no errors. Side-impact and packaged damaged captures were visually inspected. Browser interaction automation still cannot initialize; publication is checked through live version and asset hashes.

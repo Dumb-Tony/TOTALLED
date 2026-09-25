@@ -92,13 +92,14 @@ namespace Totalled
         void Add(int[] nodes,Vector4 rect,Material mat,string name)
         {
             var go=new GameObject(name);go.layer=2;go.transform.SetParent(root,false);
-            var mesh=new Mesh();mesh.MarkDynamic();go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=mat;
+            var mesh=new Mesh();mesh.MarkDynamic();mesh.vertices=new Vector3[8];mesh.uv=new[]{Vector2.zero,Vector2.right,Vector2.one,Vector2.up,Vector2.zero,Vector2.right,Vector2.one,Vector2.up};mesh.triangles=new[]{0,1,2,0,2,3,6,5,4,7,6,4};go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=mat;
             float span=0;for(int i=0;i<4;i++)span+=Vector3.Distance(car.structure.nodes[nodes[i]].position,car.structure.nodes[nodes[(i+1)%4]].position);
             bool isGlass=name=="Breakable glass";
             if(isGlass)go.GetComponent<MeshRenderer>().shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
             float[] edges=new float[4];for(int i=0;i<4;i++)edges[i]=Vector3.Distance(SedanShape.Position(car,nodes[i]),SedanShape.Position(car,nodes[(i+1)%4]));
             patches.Add(new Patch{nodes=nodes,rect=rect,go=go,mesh=mesh,maxSpan=span*1.6f,glass=isGlass,edges=edges,depth=(name=="License plate"||name=="Grille bar"||name=="Window divider"||name=="Lamp indicator"||name=="Glass seal")?.027f:name=="Lamp recess"?.008f:name=="Pressed bonnet ridge"||name=="Cowl vent"?.048f:.014f});
         }
+        readonly Vector3[] corners=new Vector3[4],vertices=new Vector3[8];
         public void Refresh(bool visible)
         {
             brakeLens.color=car.brake>.05f||car.throttle*car.Speed<-.8f?new Color(1,.13f,.035f):new Color(.38f,.025f,.015f);
@@ -108,15 +109,15 @@ namespace Totalled
                 if(Vector3.Distance(a,b)+Vector3.Distance(b,c)+Vector3.Distance(c,d)+Vector3.Distance(d,a)>p.maxSpan)p.torn=true;
                 if(p.glass)
                 {
-                    Vector3[] corners={a,b,c,d};
+                    corners[0]=a;corners[1]=b;corners[2]=c;corners[3]=d;
                     for(int edge=0;edge<4;edge++)if(Mathf.Abs(Vector3.Distance(corners[edge],corners[(edge+1)%4])/p.edges[edge]-1)>.12f)p.torn=true;
                 }
                 p.go.SetActive(visible&&!p.torn);if(!visible||p.torn)continue;
                 Vector3 normal=Vector3.Cross(b-a,d-a).normalized;
                 if(Vector3.Dot(normal,(a+b+c+d)*.25f-car.Center)<0)normal=-normal;
                 Vector3 offset=normal*p.depth;
-                var r=p.rect;Vector3[] v={Point(a,b,c,d,r.x,r.y)+offset,Point(a,b,c,d,r.z,r.y)+offset,Point(a,b,c,d,r.z,r.w)+offset,Point(a,b,c,d,r.x,r.w)+offset};
-                p.mesh.Clear();p.mesh.vertices=new[]{v[0],v[1],v[2],v[3],v[0],v[1],v[2],v[3]};p.mesh.uv=new[]{Vector2.zero,Vector2.right,Vector2.one,Vector2.up,Vector2.zero,Vector2.right,Vector2.one,Vector2.up};p.mesh.triangles=new[]{0,1,2,0,2,3,6,5,4,7,6,4};p.mesh.RecalculateNormals();p.mesh.RecalculateBounds();
+                var r=p.rect;vertices[0]=vertices[4]=Point(a,b,c,d,r.x,r.y)+offset;vertices[1]=vertices[5]=Point(a,b,c,d,r.z,r.y)+offset;vertices[2]=vertices[6]=Point(a,b,c,d,r.z,r.w)+offset;vertices[3]=vertices[7]=Point(a,b,c,d,r.x,r.w)+offset;
+                p.mesh.vertices=vertices;p.mesh.RecalculateNormals();p.mesh.RecalculateBounds();
             }
         }
         static Vector3 Point(Vector3 a,Vector3 b,Vector3 c,Vector3 d,float u,float v)=>Vector3.LerpUnclamped(Vector3.LerpUnclamped(a,b,u),Vector3.LerpUnclamped(d,c,u),v);

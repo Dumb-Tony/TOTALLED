@@ -9,10 +9,19 @@ namespace Totalled
         sealed class Surface {public int a,b,c;public float perimeter;public bool torn;}
         readonly Dictionary<SacrificialSedan,List<Surface>> surfaces=new Dictionary<SacrificialSedan,List<Surface>>();
         public int ContactCount {get;private set;}
+#if UNITY_EDITOR
+        public double solveMs,contactMs;
+#endif
+        readonly NodeBroadphase broadphase=new NodeBroadphase();
+        Vector3[] starts=new Vector3[4];
+        UnityEngine.Bounds[] carBounds=new UnityEngine.Bounds[4];
         public void Step(IList<SacrificialSedan> cars,float dt)
         {
             ContactCount=0;
-            var starts=new Vector3[cars.Count];
+#if UNITY_EDITOR
+            solveMs=contactMs=0;
+#endif
+            if(starts.Length<cars.Count){System.Array.Resize(ref starts,cars.Count*2);System.Array.Resize(ref carBounds,cars.Count*2);}
             for(int i=0;i<cars.Count;i++){var car=cars[i];starts[i]=car.Center;Register(car);car.PrepareTick(dt);car.structure.Begin(dt);}
             const int substeps=10,iterations=8;float h=dt/substeps;
             for(int sub=0;sub<substeps;sub++)
@@ -20,14 +29,27 @@ namespace Totalled
                 foreach(var car in cars)car.structure.Predict(h,car.ApplyWheelForces);
                 for(int it=0;it<iterations;it++)
                 {
+                    #if UNITY_EDITOR
+                    long stamp=System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
                     foreach(var car in cars)car.structure.Solve(h,it);
+#if UNITY_EDITOR
+                    solveMs+=(System.Diagnostics.Stopwatch.GetTimestamp()-stamp)*1000.0/System.Diagnostics.Stopwatch.Frequency;
+#endif
                     if(it!=3&&it!=7)continue;
+                    #if UNITY_EDITOR
+                    stamp=System.Diagnostics.Stopwatch.GetTimestamp();
+#endif
+                    for(int i=0;i<cars.Count;i++)carBounds[i]=Bounds(cars[i]);
                     for(int a=0;a<cars.Count;a++)for(int b=a+1;b<cars.Count;b++)
                     {
-                        if(!Bounds(cars[a]).Intersects(Bounds(cars[b])))continue;
+                        if(!carBounds[a].Intersects(carBounds[b]))continue;
                         if(it==3){Contact(cars[a],cars[b],h);Contact(cars[b],cars[a],h);}
                         else {Contact(cars[b],cars[a],h);Contact(cars[a],cars[b],h);}
                     }
+#if UNITY_EDITOR
+                    contactMs+=(System.Diagnostics.Stopwatch.GetTimestamp()-stamp)*1000.0/System.Diagnostics.Stopwatch.Frequency;
+#endif
                 }
                 foreach(var car in cars)car.structure.Finish(h);
             }
@@ -42,7 +64,14 @@ namespace Totalled
         void Register(SacrificialSedan car)
         {
             if(surfaces.ContainsKey(car))return;var faces=new List<Surface>();surfaces.Add(car,faces);
-            foreach(var q in car.shell)Quad(car,faces,q);
+            foreach(var q in car.shell)
+            {
+                // The cabin side opening is occupied by the deformable door.
+                // Do not put an invisible second skin directly behind it.
+                bool opening=true;int side=q[0]%3;
+                foreach(int id in q)if(id>=42||id/6<2||id/6>4||id%3!=side||side==1)opening=false;
+                if(!opening)Quad(car,faces,q);
+            }
             foreach(var panel in car.panels)foreach(var q in panel.faces)Quad(car,faces,q);
             Quad(car,faces,new[]{SacrificialSedan.Index(0,1,4),SacrificialSedan.Index(2,1,4),44,45});
             Quad(car,faces,new[]{SacrificialSedan.Index(2,1,2),SacrificialSedan.Index(0,1,2),42,43});
@@ -56,16 +85,17 @@ namespace Totalled
         }
         void Contact(SacrificialSedan pointCar,SacrificialSedan faceCar,float h)
         {
-            var points=pointCar.structure;var face=faceCar.structure;
+            var points=pointCar.structure;var face=faceCar.structure;broadphase.Refit(points);
             foreach(var t in surfaces[faceCar])
             {
                 var a=face.nodes[t.a];var b=face.nodes[t.b];var c=face.nodes[t.c];
                 if(t.torn)continue;
                 if((a.position-b.position).magnitude+(b.position-c.position).magnitude+(c.position-a.position).magnitude>t.perimeter*1.8f){t.torn=true;continue;}
-                var box=new Bounds(a.position,Vector3.zero);box.Encapsulate(b.position);box.Encapsulate(c.position);box.Encapsulate(a.previous);box.Encapsulate(b.previous);box.Encapsulate(c.previous);box.Expand(.9f);
-                foreach(var p in points.nodes)
+                var box=new Bounds(a.position,Vector3.zero);box.Encapsulate(b.position);box.Encapsulate(c.position);box.Encapsulate(a.previous);box.Encapsulate(b.previous);box.Encapsulate(c.previous);
+                broadphase.Query(box);
+                foreach(int pointIndex in broadphase.candidates)
                 {
-                    if(!box.Contains(p.position)&&!box.Contains(p.previous))continue;
+                    var p=points.nodes[pointIndex];
                     Vector3 weights=Closest(p.position,a.position,b.position,c.position);
                     Vector3 closest=a.position*weights.x+b.position*weights.y+c.position*weights.z;
                     Vector3 delta=p.position-closest;float distance=delta.magnitude,radius=p.radius+.025f;
@@ -80,7 +110,7 @@ namespace Totalled
                     float inverse=p.inverseMass+weights.x*weights.x*a.inverseMass+weights.y*weights.y*b.inverseMass+weights.z*weights.z*c.inverseMass;
                     float lambda=Mathf.Min(depth,.12f)/inverse;
                     Vector3 correction=direction*lambda;
-                    p.position+=correction*p.inverseMass;
+                    p.position+=correction*p.inverseMass;broadphase.Update(pointIndex);
                     a.position-=correction*(weights.x*a.inverseMass);b.position-=correction*(weights.y*b.inverseMass);c.position-=correction*(weights.z*c.inverseMass);
                     ContactCount++;
                     if(lambda/h>15)
