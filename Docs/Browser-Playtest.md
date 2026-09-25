@@ -59,3 +59,6 @@ Live Pages verification: 0.7 starts and renders the updated cars without console
 All 55 simulation checks pass. Added front/rear stage checks verify both sections yield under actual wall impacts while the cabin sees much less permanent deformation; node mass remains 1272 kg. Front stage totals in the controlled test: outer 2.506 m, inner 0.265 m; cabin 0.006 m. Rear: outer 3.319 m, inner 0.343 m; cabin below 0.001 m. These are summed beam rest-length changes, not body shortening.
 
 Packaged Windows startup, repeated collisions, engine/tire audio sources and skid marks pass without errors. Intact and damaged rendered captures were inspected. Browser interaction automation could not start after the host restart because its sandbox helper failed; this release uses deployment and asset checks rather than a claimed live browser-driving test.
+
+Deployment verification: GitHub Pages reports the 0.8 deployment built successfully. The live page identifies PLAYTEST 0.8. All four referenced loader/data/framework/WebAssembly assets return HTTP 200 and byte-match the successful local build by SHA-256. Browser interaction was not retested for the reason above.
+
