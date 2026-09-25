@@ -43,3 +43,6 @@ The public build loads with wheel openings, shaded windows, rear plates, correct
 ## Build checks — 0.6
 
 All 45 numerical checks pass. Windows startup/crash smoke verification passes without errors. Intact and exposed-engine captures were inspected. The browser build targets standard WebAssembly because the bundled wasm23 engine archive failed with an invalid function relocation in Unity's serialization backend. Engine stripping remains enabled. The build script explicitly selects runtime-speed optimization.
+
+Live Pages 0.6 verification: updated silhouette and transparent cabin render correctly; a frontal wall impact yielded 127 beams, broke 12 connections and retained 5.625 m of cumulative plastic travel in the observed run. No browser console errors were recorded. Compact HUD shows 0.6; the expanded telemetry header retains the older 0.5 label (cosmetic).
+
