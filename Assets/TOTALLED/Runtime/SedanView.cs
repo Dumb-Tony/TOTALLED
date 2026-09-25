@@ -169,8 +169,9 @@ namespace Totalled
             debugMesh.Clear();debugMesh.SetVertices(verts);debugMesh.SetColors(colors);debugMesh.SetIndices(indices,MeshTopology.Lines,0);debugMesh.RecalculateBounds();
         }
         public static Quaternion WheelRotation(Vector3 axle,float radians)
-        {return Quaternion.FromToRotation(Vector3.up,axle)*Quaternion.AngleAxis(-radians*Mathf.Rad2Deg,Vector3.up);}
+        {return Quaternion.FromToRotation(Vector3.up,axle)*Quaternion.AngleAxis(radians*Mathf.Rad2Deg,Vector3.up);}
         static void Line(List<Vector3> v,List<Color> c,List<int> t,Vector3 a,Vector3 b,Color color)
         { t.Add(v.Count);v.Add(a);c.Add(color);t.Add(v.Count);v.Add(b);c.Add(color); }
     }
 }
+

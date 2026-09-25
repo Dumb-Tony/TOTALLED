@@ -1,0 +1,4 @@
+PASS: Powered driving visibly rotates both the tire mesh and detailed rim.
+PASS: Rolling tire stays aligned to its actual suspension axle.
+PASS: Forward rolling moves the bottom tread backward relative to the hub.
+PASS: Reverse rolling moves the bottom tread forward relative to the hub.
