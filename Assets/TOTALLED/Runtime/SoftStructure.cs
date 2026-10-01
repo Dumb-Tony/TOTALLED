@@ -10,7 +10,7 @@ namespace Totalled
         public Vector3 position, previous, velocity, force, original;
         public float inverseMass, radius;
         public bool grounded;
-        // Static-world broad phase, reused during constraint sweeps. Requery
+        // Static-world broad phase, reused across substeps. Track obstacles must remain static. Requery
         // whenever corrections leave the conservative neighbourhood.
         internal readonly Collider[] nearby = new Collider[32];
         internal int nearbyCount = -1;
@@ -28,8 +28,9 @@ namespace Totalled
         public int attachment = -1;
         public float plasticRate = 24;
         public float damping = .08f;
+        public float softening, workingYield;
         public Beam(int a, int b, float length, float compliance, float yield, float failure, bool mount)
-        { this.a = a; this.b = b; rest = initial = length; this.compliance = compliance; this.yield = yield; this.failure = failure; this.mount = mount; }
+        { this.a = a; this.b = b; rest = initial = length; this.compliance = compliance; this.yield = workingYield = yield; this.failure = failure; this.mount = mount; }
     }
 
     public struct ContactSample
@@ -101,13 +102,18 @@ namespace Totalled
                 forces?.Invoke(h);
                 foreach (var n in nodes)
                 {
-                    n.previous = n.position; n.nearbyCount = -1;
+                    n.previous = n.position;
                     n.velocity += (Physics.gravity + n.force * n.inverseMass) * h;
                     n.velocity *= Mathf.Exp(-.035f * h);
                     n.position += n.velocity * h;
                     n.grounded = false;
                 }
-                foreach (var b in beams) b.lambda = 0;
+                foreach (var b in beams) {
+                    b.lambda=0;
+                    // Previously folded metal loses load capacity. Intact members
+                    // retain their original yield threshold under normal driving.
+                    b.workingYield=b.yield*(1-b.softening*Mathf.InverseLerp(.01f,.07f,b.plastic/b.initial));
+                }
         }
         public void Solve(float h,int it)
         {
@@ -128,7 +134,7 @@ namespace Totalled
                             // A yielded member cannot keep applying an unbounded elastic
                             // restoring impulse. Limit its load so impact motion can crush
                             // the structure; the dissipative return below retains that shape.
-                            float limit=b.yield*Mathf.Max(.3f,b.initial)/2e-6f*h*h*1.8f;
+                            float limit=b.workingYield*Mathf.Max(.3f,b.initial)/2e-6f*h*h*1.8f;
                             dl=Mathf.Clamp(b.lambda+dl,-limit,limit)-b.lambda;
                         }
                         b.lambda += dl;
@@ -147,14 +153,14 @@ namespace Totalled
                     // whose post-solve positional strain alone would hide the impact load.
                     float force = b.lambda / (h * h);
                     float elasticStrain = -force * 2e-6f / Mathf.Max(.3f, b.initial);
-                    b.stress = Mathf.Abs(elasticStrain) / b.yield;
+                    b.stress = Mathf.Abs(elasticStrain) / b.workingYield;
                     float magnitude = Mathf.Abs(elasticStrain);
                     float geometricStrain = Mathf.Abs(Vector3.Distance(nodes[b.a].position,nodes[b.b].position)-b.rest)/b.initial;
                     if ((b.mount ? magnitude > b.failure : geometricStrain > b.failure) || b.plastic > b.initial * .5f)
                     { Fracture(b); continue; }
-                    if (magnitude > b.yield)
+                    if (magnitude > b.workingYield)
                     {
-                        float change = Mathf.Sign(elasticStrain) * Mathf.Min(magnitude - b.yield, .9f) * b.initial * b.plasticRate * h;
+                        float change = Mathf.Sign(elasticStrain) * Mathf.Min(magnitude - b.workingYield, .9f) * b.initial * b.plasticRate * h;
                         // Return toward the actual strained length, never past it.
                         // Force-based flow without this bound can inject energy into
                         // stiff bracing and trigger runaway failure of the entire car.

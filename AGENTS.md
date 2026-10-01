@@ -1,8 +1,8 @@
 # TOTALLED — Crash Lab
 
-Work only on making repeated impacts physically convincing until the acceptance gate in Docs/Design.md passes. No derby AI, menus, progression or vehicle catalog yet.
+Current authorized scope: develop the first playable race-and-demolition level, Motor Works, with AI opponents, a clear finish objective and start/restart flow. Preserve the Crash Lab physics regression scene and continue validating persistent damage. No progression system or vehicle catalog is required yet.
 
-Unity 6000.6.0f1, built-in renderer, C#. Open Assets/TOTALLED/Scenes/CrashLab.unity. All runtime geometry is original procedural placeholder art.
+Unity 6000.6.0f1, built-in renderer, C#. Open Assets/TOTALLED/Scenes/MotorWorks.unity for the race or Assets/TOTALLED/Scenes/CrashLab.unity for physics tools. All runtime geometry is original procedural placeholder art.
 
 The node graph is the source of truth. Never heal node positions or beam rest lengths during recovery. Never substitute global vehicle HP or canned wreck stages. Wheel traction must follow the current attachment geometry. Debris persists until an explicit new experiment.
 

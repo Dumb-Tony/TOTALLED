@@ -1,0 +1,20 @@
+{
+    "hits": [
+        {
+            "speed": 12.0,
+            "plastic": 3.101588249206543,
+            "frontLength": 2.4010486602783203,
+            "repeatedPlastic": 6.395833969116211,
+            "broken": 8,
+            "loosePanels": 2
+        },
+        {
+            "speed": 18.0,
+            "plastic": 5.209456443786621,
+            "frontLength": 2.2329461574554443,
+            "repeatedPlastic": 10.411436080932617,
+            "broken": 11,
+            "loosePanels": 2
+        }
+    ]
+}

@@ -44,7 +44,7 @@ public static class CrashLabBuild
         new GameObject("Crash Lab bootstrap").AddComponent<CrashLab>();
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        PlayerSettings.bundleVersion="0.8.1";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
+        PlayerSettings.bundleVersion="0.9.0";PlayerSettings.companyName="TOTALLED";PlayerSettings.productName="TOTALLED — Crash Lab";
         PlayerSettings.defaultScreenWidth=1600;PlayerSettings.defaultScreenHeight=900;
         PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
         PlayerSettings.runInBackground=true;
@@ -164,8 +164,8 @@ public static class CrashLabBuild
     [MenuItem("TOTALLED/Build Windows prototype")]
     public static void BuildWindows()
     {
-        CreateScene();Directory.CreateDirectory("Builds/Windows");
-        var result=BuildPipeline.BuildPlayer(new[]{ScenePath},"Builds/Windows/TOTALLED-CrashLab.exe",BuildTarget.StandaloneWindows64,BuildOptions.Development);
+        DerbyRaceBuild.CreateScene();Directory.CreateDirectory("Builds/Windows");
+        var result=BuildPipeline.BuildPlayer(new[]{"Assets/TOTALLED/Scenes/MotorWorks.unity"},"Builds/Windows/TOTALLED-CrashLab.exe",BuildTarget.StandaloneWindows64,BuildOptions.Development);
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Windows build failed: "+result.summary.result);
     }
 }

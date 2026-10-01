@@ -48,7 +48,7 @@ namespace Totalled
             // rail's force capacity merely because the segment became shorter.
             float length=Vector3.Distance(s.nodes[a].position,s.nodes[b].position);
             yield*=Mathf.Max(1,.8f/Mathf.Max(.3f,length));
-            int id=s.AddBeam(a,b,2e-8f,yield,1.15f);s.beams[id].plasticRate=95;
+            int id=s.AddBeam(a,b,2e-8f,yield,.95f);s.beams[id].plasticRate=125;s.beams[id].softening=.5f;
         }
         public static Vector3 Skin(SacrificialSedan car,Vector3 p)
         {

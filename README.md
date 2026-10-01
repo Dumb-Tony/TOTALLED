@@ -1,58 +1,30 @@
-# TOTALLED — Crash Lab
+# TOTALLED — Motor Works
 
-[**Play in your browser**](https://dumb-tony.github.io/TOTALLED/) · [Windows download](https://github.com/Dumb-Tony/TOTALLED/releases/latest) · [Report a playtest bug](https://github.com/Dumb-Tony/TOTALLED/issues/new)
+[Play Level 01](https://dumb-tony.github.io/TOTALLED/) · [Windows download](https://github.com/Dumb-Tony/TOTALLED/releases/latest) · [Report a bug](https://github.com/Dumb-Tony/TOTALLED/issues/new)
 
-Local Unity 6.6 technical prototype for persistent, deformable demolition-derby cars. Project: `C:\Dev\Unity\TOTALLED`. Unity version: **6000.6.0f1**. No purchased assets or external code dependencies.
+A three-lap banger race with three AI rivals and persistent node-and-beam vehicle damage. First across the line wins. Ramming is allowed; wrecks stay on the circuit.
 
-## Play
+## Controls
 
-Open the project in Unity, open `Assets/TOTALLED/Scenes/CrashLab.unity`, and press Play. If the scene is absent, use **TOTALLED → Create Crash Lab scene**. A standalone Windows development build can be generated with **TOTALLED → Build Windows prototype** and is placed in `Builds/Windows`.
+Enter starts or races again. WASD / arrows drive; Space applies the handbrake; Shift / Ctrl brakes. Escape pauses. R restarts the whole event. F returns your car to the track without repairing it. M mutes audio.
 
-| Control | Action |
-|---|---|
-| WASD / arrow keys | Throttle, reverse, steer |
-| Space / left Shift (or left Ctrl) | Rear handbrake / all-wheel brake |
-| 1 / 2 / 3 / 4 | Launch same damaged specimen into front / rear / side wall / offset pole |
-| 5 / 6 | Hit the other car / slide your side into it |
-| E | Switch which car you drive |
-| H / M | Detailed telemetry / mute audio |
-| [ / ] | Decrease / increase laboratory launch speed |
-| R | Upright and relocate connected structure; preserve all damage |
-| N | Spawn a new specimen; keep old wreck and debris |
-| P / period / T | Pause / single step while paused / slow motion |
-| B / V / C | Toggle body / node-beam overlay / component markers |
-| Tab | Stress → cumulative plastic travel → broken-beam emphasis → crumple zones |
-| Right mouse drag / wheel | Orbit / zoom |
+See [Playtest 0.9](Docs/Playtest-0.9.md) for scope and limitations.
 
-Impact shortcuts are explicit laboratory launches, not normal vehicle driving. Debris that has detached is left where it fell when recovering a specimen. There is no global vehicle health or automatic wreck deletion.
+## Unity development
 
-## Verify
+Unity **6000.6.0f1**. Local project: C:\Dev\Unity\TOTALLED.
 
-From PowerShell (close this project's editor first):
+Open Assets/TOTALLED/Scenes/MotorWorks.unity for the race. Assets/TOTALLED/Scenes/CrashLab.unity retains the technical test yard and its debug tools. Cars, track geometry and textures are original procedural prototype assets.
 
-```powershell
-& 'C:\Program Files\Unity\Hub\Editor\6000.6.0f1\Editor\Unity.exe' -batchmode -projectPath 'C:\Dev\Unity\TOTALLED' -executeMethod CrashLabBuild.Verify -logFile 'C:\Dev\Unity\TOTALLED\verification.log'
-```
+The runtime separates the structural solver, shared vehicle contacts, sedan definition, rendering, race rules and AI controls. Damage comes from structural deformation and broken connections, not a global vehicle health bar.
 
-The verifier exits Unity when finished. Inspect `Artifacts/verification.json` and the nine PNG captures. `-nographics` allows numerical checks but intentionally skips captures. Use the **TOTALLED** editor menu for an interactive run; it replaces the open scene, so save your edits first.
+## Validation and publishing
 
-Launch the Windows player with `-crashlab-smoke` for a twelve-second unattended rendered, audio-source and skid-mark check. It writes `Artifacts/runtime-smoke.json` and three screenshots, then exits. This option is only for validation; ordinary launches are fully interactive.
+- CrashLabBuild.Verify: crash, steering, braking, elastic/plastic deformation, two-car collisions and repeated-impact regressions.
+- DerbyRaceBuild.Verify: full autonomous four-car event, directional lap gates, finish rules and damage-preserving recovery.
+- DestructionBenchmark.Run: matched-speed first and repeated wall impacts.
+- CrashLabBuild.BuildWindows: packaged Motor Works event.
+- CrashLabPublish.BuildWeb: browser build in Builds/WebGL.
+- Launch the Windows build with -race-smoke for startup/countdown/driving/restart checks.
 
-## Structure
-
-- `Assets/TOTALLED/Runtime/SoftStructure.cs`: nodes, beams, plasticity, fracture, world collision.
-- `SacrificialSedan.cs`: structural graph, suspension/contact forces, localized mechanics.
-- `SedanView.cs`: node-driven mesh, wheels, structural debug overlays.
-- `CrashLab.cs`: lab geometry, controls, time, repeat impacts and telemetry.
-- `Assets/TOTALLED/Editor/CrashLabBuild.cs`: scene generation, regression captures and Windows build.
-- `Docs/Design.md`: design intent, acceptance gate and precise limitations.
-
-**Two-car collision prototype:** both sedans use the same deformable simulation and exchange contact forces. Node-to-surface contacts include spawned specimens. Self-collision, full continuous surface collision, and tires rolling on other cars are not implemented. See Docs/Playtest-0.4.md.
-
-## Publishing playtests
-
-The public source repository is `Dumb-Tony/TOTALLED`. The `gh-pages` branch hosts the browser build at **https://dumb-tony.github.io/TOTALLED/**. Share this playable URL as the primary handoff for playtesters.
-
-Use **TOTALLED → Build browser playtest**, or run `CrashLabPublish.BuildWeb` in batch mode with `-buildTarget WebGL`. The output is `Builds/WebGL`; the build step installs the page from `Tools/Playtest/index.html`. Gzip with Unity's decompression fallback works without custom server headers. Publish the contents of that directory to the root of `gh-pages`, keeping `.nojekyll`.
-
-The browser build is the actual Unity simulation, not a rewritten browser approximation. Use a desktop browser with a keyboard and mouse. Mobile controls and multiplayer are not implemented. When reporting bugs, include your browser, impact sequence, and whether you used recovery or spawned additional specimens.
+Publish browser output on gh-pages and Windows ZIPs under GitHub Releases. Numerical checks do not certify handling quality, BeamNG fidelity or browser frame rate. Results and limitations are in Docs/Browser-Playtest.md.

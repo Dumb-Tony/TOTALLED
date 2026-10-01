@@ -145,9 +145,9 @@ namespace Totalled
             p.nodes[9]=structure.AddNode(origin+center-normal*.18f,2,.045f);
             for(int i=0;i<9;i++)
             {
-                int brace=structure.AddBeam(p.nodes[i],p.nodes[9],3e-9f,name.EndsWith("door")?.008f:.07f,1.3f);structure.beams[brace].damping=.3f;if(name.EndsWith("door"))structure.beams[brace].plasticRate=100;
+                int brace=structure.AddBeam(p.nodes[i],p.nodes[9],3e-9f,name.EndsWith("door")?.0065f:.045f,1.3f);structure.beams[brace].damping=.3f;structure.beams[brace].plasticRate=100;
                 for(int j=i+1;j<9;j++)if(Mathf.Abs(i%3-j%3)<=1&&Mathf.Abs(i/3-j/3)<=1)
-                {int edge=structure.AddBeam(p.nodes[i],p.nodes[j],3e-9f,name.EndsWith("door")?.015f:.065f,1.3f);structure.beams[edge].damping=.2f;if(name.EndsWith("door"))structure.beams[edge].plasticRate=100;}
+                {int edge=structure.AddBeam(p.nodes[i],p.nodes[j],3e-9f,name.EndsWith("door")?.0125f:.045f,1.3f);structure.beams[edge].damping=.2f;structure.beams[edge].plasticRate=100;}
             }
             for(int row=0;row<2;row++)for(int col=0;col<2;col++)
             {int i=row*3+col;p.faces.Add(new[]{p.nodes[i],p.nodes[i+1],p.nodes[i+4],p.nodes[i+3]});}
@@ -159,7 +159,7 @@ namespace Totalled
                 int anchor=anchors[i];int x=anchor%3, y=(anchor/3)%2, z=anchor/6;
                 int[] supports={anchor,Index(1,y,z),Index(x,1-y,z)};
                 var group=new int[3];
-                for(int k=0;k<3;k++)group[k]=structure.AddBeam(p.nodes[corners[i]],supports[k],2e-9f,i==2?.12f:.24f,i==2?.22f:.50f,true);
+                for(int k=0;k<3;k++)group[k]=structure.AddBeam(p.nodes[corners[i]],supports[k],2e-9f,i==2?.12f:.24f,name.EndsWith("door")?(i==2?.22f:.50f):(i==2?.16f:.38f),true);
                 structure.GroupAttachment(group);p.mounts[i]=group[0];
             }
             panels.Add(p);

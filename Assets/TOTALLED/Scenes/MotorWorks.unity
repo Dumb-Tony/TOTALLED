@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 2008327318}
   - component: {fileID: 2008327317}
   m_Layer: 0
-  m_Name: Crash Lab bootstrap
+  m_Name: Motor Works race
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -145,11 +145,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2008327316}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51b31760af9a93a419b9fb6cceff42d0, type: 3}
+  m_Script: {fileID: 11500000, guid: c93d3d956cc4d7748898e3e537d11601, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Totalled.CrashLab
-  LaunchSpeed: 18
-  automatedInput: 0
+  m_EditorClassIdentifier: Assembly-CSharp::Totalled.DerbyRace
+  AutoDrive: 0
+  Paused: 0
 --- !u!4 &2008327318
 Transform:
   m_ObjectHideFlags: 0

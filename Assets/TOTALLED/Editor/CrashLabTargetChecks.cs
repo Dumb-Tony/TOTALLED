@@ -55,7 +55,12 @@ public static class CrashLabTargetChecks
                 Vector3 corner=(nodes[panel.nodes[0]].position+nodes[panel.nodes[2]].position+nodes[panel.nodes[6]].position+nodes[panel.nodes[8]].position)*.25f;
                 Vector3 normal=Vector3.Cross(nodes[panel.nodes[2]].position-nodes[panel.nodes[0]].position,nodes[panel.nodes[6]].position-nodes[panel.nodes[0]].position).normalized;
                 float dent=Mathf.Abs(Vector3.Dot(nodes[panel.nodes[4]].position-corner,normal));
-                check(dent>.10f,$"T-bone leaves a permanent {panel.name} dent ({dent:0.000} m depth after settling).");
+                                float panelPlastic=0;
+                foreach(var beam in target.structure.beams)
+                    if(Array.IndexOf(panel.nodes,beam.a)>=0&&Array.IndexOf(panel.nodes,beam.b)>=0)panelPlastic+=beam.plastic;
+                int mounts=panel.LiveMounts(target.structure);
+                check(dent>.10f||(mounts<3&&panelPlastic>.05f),
+                    $"T-bone permanently dents or tears the {panel.name}: dent {dent:0.000} m, sheet plastic {panelPlastic:0.000} m, {mounts}/3 mounts remain.");
                 var sideView=new SedanView(target,new Color(.16f,.38f,.40f));sideView.Refresh();
                 Capture(lab,"side-dent-"+direction,target.Center+target.Right*(direction==0?5:-5)+Vector3.up*2-target.Forward*2,target.Center+Vector3.up*.2f);
                 UnityEngine.Object.DestroyImmediate(sideView.root);

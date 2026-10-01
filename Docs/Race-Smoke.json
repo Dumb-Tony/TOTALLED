@@ -1,0 +1,7 @@
+{
+    "passed": true,
+    "restartPassed": true,
+    "captures": 3,
+    "scope": "Packaged race startup/countdown, autonomous driving and scene restart; not interactive browser FPS.",
+    "errors": []
+}

@@ -9,7 +9,7 @@ public static class CrashLabPublish
     [MenuItem("TOTALLED/Build browser playtest")]
     public static void BuildWeb()
     {
-        CrashLabBuild.CreateScene();
+        DerbyRaceBuild.CreateScene();
         PlayerSettings.WebGL.compressionFormat=WebGLCompressionFormat.Gzip;
         PlayerSettings.WebGL.decompressionFallback=true;
         PlayerSettings.WebGL.dataCaching=true;
@@ -21,7 +21,7 @@ public static class CrashLabPublish
         PlayerSettings.WebGL.emscriptenArgs=string.Empty;
         UnityEditor.WebGL.UserBuildSettings.codeOptimization=UnityEditor.WebGL.WasmCodeOptimization.RuntimeSpeed;
         Directory.CreateDirectory("Builds/WebGL");
-        var result=BuildPipeline.BuildPlayer(new[]{"Assets/TOTALLED/Scenes/CrashLab.unity"},"Builds/WebGL",BuildTarget.WebGL,BuildOptions.None);
+        var result=BuildPipeline.BuildPlayer(new[]{"Assets/TOTALLED/Scenes/MotorWorks.unity"},"Builds/WebGL",BuildTarget.WebGL,BuildOptions.None);
         if(result.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("Web build failed: "+result.summary.result);
         string build="Builds/WebGL/Build";
         string generated=File.ReadAllText("Builds/WebGL/index.html");

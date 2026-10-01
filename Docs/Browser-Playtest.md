@@ -5,7 +5,7 @@
 - Windows download: https://github.com/Dumb-Tony/TOTALLED/releases/latest
 - Bug reports: https://github.com/Dumb-Tony/TOTALLED/issues/new
 
-The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.8.1`.
+The Unity WebGL release build is hosted on the repository's `gh-pages` branch. The latest Windows ZIP is published under release `v0.9.0`.
 
 ## Live checks — 0.2 (historical)
 
@@ -69,3 +69,12 @@ All 64 physics checks pass. Left/right T-bones leave 0.166 / 0.171 m permanent d
 
 The packaged Windows smoke test passes with three captures, two engine audio sources, tire scrub audio, 648 skid vertices and no errors. Side-impact and packaged damaged captures were visually inspected. Browser interaction automation still cannot initialize; publication is checked through live version and asset hashes.
 Deployment verified: GitHub Pages built commit 6379a48 successfully. The live 0.8.1 page references four assets that all return HTTP 200 and match the local tested build by SHA-256.
+
+## Build checks — 0.9
+
+Motor Works is now the default playable scene: player plus three AI drivers, a three-lap walled oval, countdown, ordered gates, live lap/position display, circuit map, results, pause and restart. F resets position behind the last earned gate without repairing damage.
+
+All 64 crash regressions pass after stronger progressive destruction tuning. At 18 m/s the matched wall test changes from 3 broken connections and one loose panel to 11 and two. Side checks accept either a retained deep dent or a permanently deformed panel with physically failed mounts. See the committed before/after measurements; summed beam plastic travel is not body shortening.
+
+Browser automation still fails to start because of the host sandbox helper error. Packaged runtime checks and published asset verification are recorded separately and do not certify interactive browser frame rate.
+The full four-car autonomous event passes all 12 event checks and finishes in 74.12 simulated seconds. Editor physics averages 23.30 ms per tick for this field; this is not a browser FPS measurement. The packaged race passes ready/countdown/driving/restart checks with no errors and exactly four vehicle-feedback objects after restart. Offscreen track and chase-camera captures were inspected; hidden-window HUD screenshots were black, so UI appearance is not claimed as visually verified.

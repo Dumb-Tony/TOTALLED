@@ -1,0 +1,27 @@
+{
+    "passed": true,
+    "checks": [
+        "PASS: Race opens on ready screen with player and three opponents.",
+        "PASS: Repeated start-line crossing cannot award laps.",
+        "PASS: Skipping ordered gates cannot shortcut a lap.",
+        "PASS: Reverse gate crossing does not count.",
+        "PASS: Three full ordered laps finish the race.",
+        "PASS: Countdown holds the field and does not consume race time.",
+        "PASS: All four cars remain finite through the event.",
+        "PASS: Event always reaches results, including time-limit fallback.",
+        "PASS: Autonomous player can complete the full three-lap circuit.",
+        "PASS: At least two opponents complete a lap using wheel forces and steering.",
+        "PASS: Racing field produces real two-way vehicle contacts.",
+        "PASS: Track recovery preserves damage and cannot advance race progress."
+    ],
+    "gates": [
+        72,
+        71,
+        72,
+        70
+    ],
+    "contacts": 135633,
+    "raceSeconds": 74.11957550048828,
+    "meanTickMs": 23.302767980036776,
+    "scope": "Full deterministic four-car autonomous race, editor simulation; not browser FPS."
+}
